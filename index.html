@@ -101,17 +101,11 @@
       <label for="apiKey">API Key:</label>
       <input id="apiKey" type="password" placeholder="X-API-KEY" required>
 
-      <label for="name">Name:</label>
-      <input id="name">
-
       <label for="merchantId">Merchant ID:</label>
       <input id="merchantId">
 
       <label for="merchantSiteId">Merchant Site ID:</label>
       <input id="merchantSiteId">
-
-      <label for="gatewayAccountName">Gateway Account Name:</label>
-      <input id="gatewayAccountName">
 
       <label for="gatewayName">Gateway Name:</label>
       <input id="gatewayName">
@@ -124,9 +118,6 @@
 
       <label for="clientId">Client ID:</label>
       <input id="clientId">
-
-      <label for="clientName">Client Name:</label>
-      <input id="clientName">
 
       <button onclick="start()">Iniciar llamadas</button>
     </div>
@@ -159,15 +150,12 @@
       };
 
       const inputs = {
-        name: document.getElementById('name').value,
         merchantId: document.getElementById('merchantId').value,
         merchantSiteId: document.getElementById('merchantSiteId').value,
-        gatewayAccountName: document.getElementById('gatewayAccountName').value,
         gatewayName: document.getElementById('gatewayName').value,
         userName: document.getElementById('userName').value,
         password: document.getElementById('password').value,
-        clientId: document.getElementById('clientId').value,
-        clientName: document.getElementById('clientName').value
+        clientId: document.getElementById('clientId').value
       };
 
       const authorizingEntityId = uuid();
@@ -180,12 +168,12 @@
       {
         method: 'PUT', // 👈 ESTE CAMBIO
         url: `${baseUrl}/entity-management-api/entities/${authorizingEntityId}`,
-        body: { id: authorizingEntityId, name: inputs.name }
+        body: { id: authorizingEntityId, name: inputs.gatewayName }
       },
       {
         method: 'PUT',
         url: `${baseUrl}/entity-management-api/entities/${processingEntityId}`,
-        body: { id: processingEntityId, parentId: authorizingEntityId, name: inputs.name }
+        body: { id: processingEntityId, parentId: authorizingEntityId, name: inputs.gatewayName }
       },
       {
         method: 'POST',
@@ -199,12 +187,12 @@
           merchantId: inputs.merchantId,
           merchantSiteId: inputs.merchantSiteId,
           gatewayAccount: {
-            gatewayAccountName: inputs.gatewayAccountName,
+            gatewayAccountName: inputs.gatewayName,
             gatewayAccountStatus: "ACTIVE",
             userName: inputs.userName,
             password: inputs.password,
             clientId: inputs.clientId,
-            clientName: inputs.clientName,
+            clientName: inputs.gatewayName,
             podId: 1
           }
         }
@@ -213,12 +201,12 @@
         method: 'PUT',
         url: `${baseUrl}/gw-connector-api/configurations/gateway-accounts`,
         body: {
-          gatewayAccountName: inputs.gatewayAccountName,
+          gatewayAccountName: inputs.gatewayName,
           gatewayAccountStatus: "ACTIVE",
           userName: inputs.userName,
           password: inputs.password,
           clientId: inputs.clientId,
-          clientName: inputs.clientName,
+          clientName: inputs.gatewayName,
           podId: 1
         }
       },
