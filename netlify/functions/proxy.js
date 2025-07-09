@@ -13,11 +13,16 @@ exports.handler = async function (event) {
     console.log('Headers:', headers);
     console.log('Body:', body);
 
-    const response = await fetch(url, {
+    const fetchOptions = {
       method: 'POST',
       headers,
-      body: body ? JSON.stringify(body) : undefined
-    });
+    };
+
+    if (body) {
+      fetchOptions.body = typeof body === 'string' ? body : JSON.stringify(body);
+    }
+
+    const response = await fetch(url, fetchOptions);
 
     const resText = await response.text();
 
