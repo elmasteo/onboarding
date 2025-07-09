@@ -245,7 +245,6 @@
 
       try {
         log(`➡️ Paso ${i + 1} URL: ${url}`);
-        log(`📦 Headers: ${JSON.stringify(headers)}`);
         log(`📤 Body: ${JSON.stringify(body, null, 2)}`);
 
         const res = await fetch('/.netlify/functions/proxy', {
