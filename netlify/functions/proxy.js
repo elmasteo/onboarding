@@ -6,15 +6,16 @@ exports.handler = async function (event) {
   }
 
   try {
-    const { url, headers, body } = JSON.parse(event.body);
+    const { url, method, headers, body } = JSON.parse(event.body);
 
     console.log('🛬 Incoming Request to proxy:');
+    console.log('Method:', method);
     console.log('URL:', url);
     console.log('Headers:', headers);
     console.log('Body:', body);
 
     const fetchOptions = {
-      method: 'POST',
+      method: method || 'POST',
       headers,
     };
 
@@ -23,7 +24,6 @@ exports.handler = async function (event) {
     }
 
     const response = await fetch(url, fetchOptions);
-
     const resText = await response.text();
 
     console.log('✅ Response from Nuvei:');

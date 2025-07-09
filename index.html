@@ -176,38 +176,29 @@
       log(`🔑 authorizingEntityId: ${authorizingEntityId}`);
       log(`🔑 processingEntityId: ${processingEntityId}`);
 
-      const steps = [
-        {
-          url: `${baseUrl}/entity-management-api/entities/${authorizingEntityId}`,
-          body: { id: authorizingEntityId, name: inputs.name }
-        },
-        {
-          url: `${baseUrl}/entity-management-api/entities/${processingEntityId}`,
-          body: { id: processingEntityId, parentId: authorizingEntityId, name: inputs.name }
-        },
-        {
-          url: `${baseUrl}/auth-api/api-keys`,
-          body: { scope: "operations", entityId: authorizingEntityId, appId: "nss" }
-        },
-        {
-          url: `${baseUrl}/gw-connector-api/configurations/entities/${processingEntityId}/features/gateway-accounts`,
-          body: {
-            merchantId: inputs.merchantId,
-            merchantSiteId: inputs.merchantSiteId,
-            gatewayAccount: {
-              gatewayAccountName: inputs.gatewayAccountName,
-              gatewayAccountStatus: "ACTIVE",
-              userName: inputs.userName,
-              password: inputs.password,
-              clientId: inputs.clientId,
-              clientName: inputs.clientName,
-              podId: 1
-            }
-          }
-        },
-        {
-          url: `${baseUrl}/gw-connector-api/configurations/gateway-accounts`,
-          body: {
+    const steps = [
+      {
+        method: 'PUT', // 👈 ESTE CAMBIO
+        url: `${baseUrl}/entity-management-api/entities/${authorizingEntityId}`,
+        body: { id: authorizingEntityId, name: inputs.name }
+      },
+      {
+        method: 'PUT',
+        url: `${baseUrl}/entity-management-api/entities/${processingEntityId}`,
+        body: { id: processingEntityId, parentId: authorizingEntityId, name: inputs.name }
+      },
+      {
+        method: 'POST',
+        url: `${baseUrl}/auth-api/api-keys`,
+        body: { scope: "operations", entityId: authorizingEntityId, appId: "nss" }
+      },
+      {
+        method: 'PUT',
+        url: `${baseUrl}/gw-connector-api/configurations/entities/${processingEntityId}/features/gateway-accounts`,
+        body: {
+          merchantId: inputs.merchantId,
+          merchantSiteId: inputs.merchantSiteId,
+          gatewayAccount: {
             gatewayAccountName: inputs.gatewayAccountName,
             gatewayAccountStatus: "ACTIVE",
             userName: inputs.userName,
@@ -216,42 +207,63 @@
             clientName: inputs.clientName,
             podId: 1
           }
-        },
-        {
-          url: `${baseUrl}/gw-connector-api/configurations/gateways`,
-          body: {
-            gatewayName: inputs.gatewayName,
-            gatewayStatus: "ONLINE",
-            uriScheme: "https",
-            uriHost: "process.sandbox.safecharge.com",
-            uriPort: 443,
-            uriPath: "/Service.asmx/Process",
-            podId: 1,
-            gatewayProtocolVersion: "4.1.9"
-          }
-        },
-        {
-          url: `${baseUrl}/gw-connector-api/configurations/entities/${authorizingEntityId}/features/gateways`,
-          body: { gatewayName: inputs.gatewayName }
-        },
-        {
-          url: `${baseUrl}/account-api/configurations/entities/${processingEntityId}/payment-options/card`,
-          body: null
         }
-      ];
+      },
+      {
+        method: 'PUT',
+        url: `${baseUrl}/gw-connector-api/configurations/gateway-accounts`,
+        body: {
+          gatewayAccountName: inputs.gatewayAccountName,
+          gatewayAccountStatus: "ACTIVE",
+          userName: inputs.userName,
+          password: inputs.password,
+          clientId: inputs.clientId,
+          clientName: inputs.clientName,
+          podId: 1
+        }
+      },
+      {
+        method: 'PUT',
+        url: `${baseUrl}/gw-connector-api/configurations/gateways`,
+        body: {
+          gatewayName: inputs.gatewayName,
+          gatewayStatus: "ONLINE",
+          uriScheme: "https",
+          uriHost: "process.sandbox.safecharge.com",
+          uriPort: 443,
+          uriPath: "/Service.asmx/Process",
+          podId: 1,
+          gatewayProtocolVersion: "4.1.9"
+        }
+      },
+      {
+        method: 'PUT',
+        url: `${baseUrl}/gw-connector-api/configurations/entities/${authorizingEntityId}/features/gateways`,
+        body: { gatewayName: inputs.gatewayName }
+      },
+      {
+        method: 'PUT',
+        url: `${baseUrl}/account-api/configurations/entities/${processingEntityId}/payment-options/card`,
+        body: null
+      }
+    ];
+
 
     for (let i = 0; i < steps.length; i++) {
       const { url, body } = steps[i];
 
       try {
-        log(`➡️ Paso ${i + 1} URL: ${url}`);
-        log(`📤 Body: ${JSON.stringify(body, null, 2)}`);
+      const { url, method, body } = steps[i];
 
-        const res = await fetch('/.netlify/functions/proxy', {
-          method: "POST",
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url, headers, body })
-        });
+      log(`➡️ Paso ${i + 1} [${method}] URL: ${url}`);
+      log(`📤 Body: ${JSON.stringify(body, null, 2)}`);
+
+      const res = await fetch('/.netlify/functions/proxy', {
+        method: "POST",
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url, method, headers, body }) // 👈 aquí pasamos `method`
+      });
+
 
         const text = await res.text();
 
@@ -267,7 +279,6 @@
         break;
       }
     }
-
 
       log("🟢 Proceso finalizado.");
 
