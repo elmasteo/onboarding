@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Nuvei API Executor</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      padding: 40px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      align-items: flex-start;
+      max-width: 1000px;
+      width: 100%;
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      display: flex;
+      gap: 20px;
+    }
+
+    .form-section, .log-section {
+      flex: 1;
+      min-width: 300px;
+    }
+
+    h2 {
+      margin-top: 0;
+      font-size: 20px;
+      color: #333;
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 4px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #28a745;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      margin-top: 20px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #218838;
+    }
+
+    .log {
+      background: #000;
+      color: #0f0;
+      padding: 10px;
+      font-family: monospace;
+      height: 520px;
+      overflow-y: auto;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      overflow-x: hidden; 
+    }
+
+    .log div {
+      margin-bottom: 8px;
+      max-width: 100%;
+      word-break: break-word; 
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="form-section">
+      <h2>Configuración Nuvei</h2>
+
+      <label for="apiKey">API Key:</label>
+      <input id="apiKey" type="password" placeholder="X-API-KEY" required>
+
+      <label for="name">Name:</label>
+      <input id="name">
+
+      <label for="merchantId">Merchant ID:</label>
+      <input id="merchantId">
+
+      <label for="merchantSiteId">Merchant Site ID:</label>
+      <input id="merchantSiteId">
+
+      <label for="gatewayAccountName">Gateway Account Name:</label>
+      <input id="gatewayAccountName">
+
+      <label for="gatewayName">Gateway Name:</label>
+      <input id="gatewayName">
+
+      <label for="userName">User Name:</label>
+      <input id="userName">
+
+      <label for="password">Password:</label>
+      <input id="password" type="password">
+
+      <label for="clientId">Client ID:</label>
+      <input id="clientId">
+
+      <label for="clientName">Client Name:</label>
+      <input id="clientName">
+
+      <button onclick="start()">Iniciar llamadas</button>
+    </div>
+
+    <div class="log-section">
+      <h2>Log</h2>
+      <div class="log" id="logBox"></div>
+    </div>
+  </div>
+
+  <script>
+    const log = (msg) => {
+    const logBox = document.getElementById('logBox');
+    const entry = document.createElement('div');
+    entry.textContent = msg;
+    logBox.appendChild(entry);
+    logBox.scrollTop = logBox.scrollHeight;
+  };
+
+
+    const uuid = () => ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+      (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+    );
+
+    async function start() {
+      const baseUrl = "https://api-sandbox.nuvei.com";
+      const headers = {
+        "Content-Type": "application/json",
+        "X-API-KEY": document.getElementById('apiKey').value
+      };
+
+      const inputs = {
+        name: document.getElementById('name').value,
+        merchantId: document.getElementById('merchantId').value,
+        merchantSiteId: document.getElementById('merchantSiteId').value,
+        gatewayAccountName: document.getElementById('gatewayAccountName').value,
+        gatewayName: document.getElementById('gatewayName').value,
+        userName: document.getElementById('userName').value,
+        password: document.getElementById('password').value,
+        clientId: document.getElementById('clientId').value,
+        clientName: document.getElementById('clientName').value
+      };
+
+      const authorizingEntityId = uuid();
+      const processingEntityId = uuid();
+
+      log(`🔑 authorizingEntityId: ${authorizingEntityId}`);
+      log(`🔑 processingEntityId: ${processingEntityId}`);
+
+      const steps = [
+        {
+          url: `${baseUrl}/entity-management-api/entities/${authorizingEntityId}`,
+          body: { id: authorizingEntityId, name: inputs.name }
+        },
+        {
+          url: `${baseUrl}/entity-management-api/entities/${processingEntityId}`,
+          body: { id: processingEntityId, parentId: authorizingEntityId, name: inputs.name }
+        },
+        {
+          url: `${baseUrl}/auth-api/api-keys`,
+          body: { scope: "operations", entityId: authorizingEntityId, appId: "nss" }
+        },
+        {
+          url: `${baseUrl}/gw-connector-api/configurations/entities/${processingEntityId}/features/gateway-accounts`,
+          body: {
+            merchantId: inputs.merchantId,
+            merchantSiteId: inputs.merchantSiteId,
+            gatewayAccount: {
+              gatewayAccountName: inputs.gatewayAccountName,
+              gatewayAccountStatus: "ACTIVE",
+              userName: inputs.userName,
+              password: inputs.password,
+              clientId: inputs.clientId,
+              clientName: inputs.clientName,
+              podId: 1
+            }
+          }
+        },
+        {
+          url: `${baseUrl}/gw-connector-api/configurations/gateway-accounts`,
+          body: {
+            gatewayAccountName: inputs.gatewayAccountName,
+            gatewayAccountStatus: "ACTIVE",
+            userName: inputs.userName,
+            password: inputs.password,
+            clientId: inputs.clientId,
+            clientName: inputs.clientName,
+            podId: 1
+          }
+        },
+        {
+          url: `${baseUrl}/gw-connector-api/configurations/gateways`,
+          body: {
+            gatewayName: inputs.gatewayName,
+            gatewayStatus: "ONLINE",
+            uriScheme: "https",
+            uriHost: "process.sandbox.safecharge.com",
+            uriPort: 443,
+            uriPath: "/Service.asmx/Process",
+            podId: 1,
+            gatewayProtocolVersion: "4.1.9"
+          }
+        },
+        {
+          url: `${baseUrl}/gw-connector-api/configurations/entities/${authorizingEntityId}/features/gateways`,
+          body: { gatewayName: inputs.gatewayName }
+        },
+        {
+          url: `${baseUrl}/account-api/configurations/entities/${processingEntityId}/payment-options/card`,
+          body: null
+        }
+      ];
+
+      for (let i = 0; i < steps.length; i++) {
+        const { url, body } = steps[i];
+        try {
+          const res = await fetch('/.netlify/functions/proxy', {
+          method: "POST",
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url, headers, body })
+        });
+          if (res.ok || res.status === 201) {
+            log(`✅ Paso ${i + 1} OK: ${url}`);
+          } else {
+            const text = await res.text();
+            log(`❌ Paso ${i + 1} Falló: ${res.status}\\n${text}`);
+            break;
+          }
+        } catch (err) {
+          log(`❌ Error en paso ${i + 1}: ${err}`);
+          break;
+        }
+      }
+
+      log("🟢 Proceso finalizado.");
+
+    }
+  </script>
+</body>
+</html>
