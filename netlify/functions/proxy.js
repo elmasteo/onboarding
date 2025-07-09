@@ -1,5 +1,3 @@
-const fetch = require('node-fetch');
-
 exports.handler = async function(event, context) {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
@@ -11,21 +9,22 @@ exports.handler = async function(event, context) {
     const response = await fetch(url, {
       method: 'POST',
       headers,
-      body: body ? JSON.stringify(body) : undefined,
+      body: body ? JSON.stringify(body) : undefined
     });
 
     const text = await response.text();
+
     return {
       statusCode: response.status,
       body: text,
       headers: {
-        'Content-Type': 'application/json',
-      },
+        'Content-Type': 'application/json'
+      }
     };
   } catch (err) {
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: err.message }),
+      body: JSON.stringify({ error: err.message })
     };
   }
 };
