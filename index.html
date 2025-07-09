@@ -240,26 +240,35 @@
         }
       ];
 
-      for (let i = 0; i < steps.length; i++) {
-        const { url, body } = steps[i];
-        try {
-          const res = await fetch('/.netlify/functions/proxy', {
+    for (let i = 0; i < steps.length; i++) {
+      const { url, body } = steps[i];
+
+      try {
+        log(`➡️ Paso ${i + 1} URL: ${url}`);
+        log(`📦 Headers: ${JSON.stringify(headers)}`);
+        log(`📤 Body: ${JSON.stringify(body, null, 2)}`);
+
+        const res = await fetch('/.netlify/functions/proxy', {
           method: "POST",
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ url, headers, body })
         });
-          if (res.ok || res.status === 201) {
-            log(`✅ Paso ${i + 1} OK: ${url}`);
-          } else {
-            const text = await res.text();
-            log(`❌ Paso ${i + 1} Falló: ${res.status}\\n${text}`);
-            break;
-          }
-        } catch (err) {
-          log(`❌ Error en paso ${i + 1}: ${err}`);
+
+        const text = await res.text();
+
+        if (res.ok || res.status === 201) {
+          log(`✅ Paso ${i + 1} OK: ${res.status}`);
+        } else {
+          log(`❌ Paso ${i + 1} Falló: ${res.status}\n${text}`);
           break;
         }
+
+      } catch (err) {
+        log(`❌ Error en paso ${i + 1}: ${err}`);
+        break;
       }
+    }
+
 
       log("🟢 Proceso finalizado.");
 
