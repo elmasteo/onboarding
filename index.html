@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <link href="https://paymentez.github.io/api-doc/images/favicon-d165b374.svg" rel="icon" type="image/svg">
   <title>Nuvei API Executor</title>
   <style>
     * { box-sizing: border-box; }
@@ -23,6 +24,15 @@
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
       display: flex;
       gap: 20px;
+    }
+    .logo {
+            text-align: center;
+            margin-bottom: 20px;
+    }
+
+    .logo img {
+            max-width: 200px;
+            height: auto;
     }
 
     .form-section, .log-section {
@@ -54,7 +64,7 @@
     button {
       width: 100%;
       padding: 12px;
-      background: #28a745;
+      background: #081f2c;
       color: #fff;
       border: none;
       border-radius: 8px;
@@ -64,7 +74,7 @@
     }
 
     button:hover {
-      background: #218838;
+      background: #175b81;
     }
 
     .log {
@@ -95,8 +105,11 @@
 </head>
 <body>
   <div class="container">
+    <div class="logo">
+            <img src="https://cdn.paymentez.com/img/nv/nuvei_logo.png" alt="Nuvei Logo">
+    </div>
     <div class="form-section">
-      <h2>Configuración Nuvei</h2>
+      <h2>Nuvei Fields</h2>
 
       <label for="apiKey">API Key:</label>
       <input id="apiKey" type="password" placeholder="X-API-KEY" required>
@@ -121,7 +134,7 @@
 
       <label for="useWebhook">
         <input type="checkbox" id="useWebhook">
-        Incluir webhook (pasos 18 y 19)
+        Include webhook - Optional
       </label>
 
       <div id="webhookFields" style="display:none;">
@@ -129,16 +142,16 @@
         <input id="webhookUrl" placeholder="https://...">
 
         <label for="contentType">Content Type:</label>
-        <input id="contentType" placeholder="Ej: JSON" value="JSON">
+        <input id="contentType" placeholder="Ex: JSON" >
 
         <label for="deliveryMethod">Delivery Method:</label>
-        <input id="deliveryMethod" placeholder="Ej: POST" value="POST">
+        <input id="deliveryMethod" placeholder="Ex: POST" >
 
         <label for="sharedSecret">Shared Secret:</label>
-        <input id="sharedSecret" placeholder="Secreto compartido">
+        <input id="sharedSecret" type="password" placeholder="Shared Secret">
       </div>
 
-      <button onclick="start()">Iniciar llamadas</button>
+      <button onclick="start()">Submit</button>
     </div>
 
     <div class="log-section">
@@ -330,9 +343,9 @@
       }
     ];
 
-    // Si el checkbox está activado, añadimos pasos 18 y 19
+    // Si el checkbox está activado, añadimos Steps 18 y 19
     if (!document.getElementById('webhookUrl').value.trim()) {
-      log("❌ Webhook URL requerido para activar pasos opcionales.");
+      log("❌ The Webhook URL is required to proceed.");
       return;
     }
 
@@ -364,7 +377,7 @@
       try {
       const { url, method, body } = steps[i];
 
-      log(`➡️ Paso ${i + 1} [${method}] URL: ${url}`);
+      log(`➡️ Step ${i + 1} [${method}] URL: ${url}`);
       log(`📤 Body: ${JSON.stringify(body, null, 2)}`);
 
       const res = await fetch('/.netlify/functions/proxy', {
@@ -377,19 +390,19 @@
         const text = await res.text();
 
         if (res.ok || res.status === 201) {
-          log(`✅ Paso ${i + 1} OK: ${res.status}`);
+          log(`✅ Step ${i + 1} OK: ${res.status}`);
         } else {
-          log(`❌ Paso ${i + 1} Falló: ${res.status}\n${text}`);
+          log(`❌ Step ${i + 1} Failed: ${res.status}\n${text}`);
           break;
         }
 
       } catch (err) {
-        log(`❌ Error en paso ${i + 1}: ${err}`);
+        log(`❌ Failed in Step ${i + 1}: ${err}`);
         break;
       }
     }
 
-      log("🟢 Proceso finalizado.");
+      log("🟢 execution completed!");
 
     }
     document.getElementById('useWebhook').addEventListener('change', e => {
