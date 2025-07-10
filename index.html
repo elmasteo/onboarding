@@ -140,8 +140,7 @@
   <!-- Contenedor principal -->
   <div class="container">
     <div class="form-section">
-      <h2>Configuración Nuvei</h2>
-
+      
       <label for="apiKey">API Key:</label>
       <input id="apiKey" type="password" placeholder="X-API-KEY" required>
 
@@ -165,7 +164,7 @@
 
       <label for="useWebhook">
         <input type="checkbox" id="useWebhook">
-        Incluir Webhook (opcional)
+        Include Webhook (optional)
       </label>
 
       <div id="webhookFields" style="display:none;">
@@ -173,16 +172,16 @@
         <input id="webhookUrl" placeholder="https://...">
 
         <label for="contentType">Content Type:</label>
-        <input id="contentType" placeholder="Ej: JSON" value="JSON">
+        <input id="contentType" placeholder="Example: JSON" >
 
         <label for="deliveryMethod">Delivery Method:</label>
-        <input id="deliveryMethod" placeholder="Ej: POST" value="POST">
+        <input id="deliveryMethod" placeholder="Example: POST" >
 
         <label for="sharedSecret">Shared Secret:</label>
-        <input id="sharedSecret" type="password" placeholder="Secreto compartido">
+        <input id="sharedSecret" type="password" placeholder="Shared Secret">
       </div>
 
-      <button onclick="start()">Ejecutar configuración</button>
+      <button onclick="start()">Submit</button>
     </div>
 
     <div class="log-section">
