@@ -4,35 +4,44 @@
   <meta charset="UTF-8">
   <link href="https://paymentez.github.io/api-doc/images/favicon-d165b374.svg" rel="icon" type="image/svg">
   <title>Nuvei API Executor</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: Arial, sans-serif;
-      background: #f2f2f2;
-      padding: 40px;
+      font-family: 'Inter', sans-serif;
+      background: #e9ecef;
+      padding: 40px 20px;
+      margin: 0;
       display: flex;
-      justify-content: center;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .logo-wrapper {
+      width: 100%;
+      max-width: 1000px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .logo-wrapper img {
+      max-width: 180px;
+      height: auto;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
     }
 
     .container {
-      align-items: flex-start;
       max-width: 1000px;
       width: 100%;
       background: #fff;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      padding: 24px;
+      border-radius: 14px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
       display: flex;
-      gap: 20px;
-    }
-    .logo {
-            text-align: center;
-            margin-bottom: 20px;
-    }
-
-    .logo img {
-            max-width: 200px;
-            height: auto;
+      gap: 24px;
     }
 
     .form-section, .log-section {
@@ -42,35 +51,50 @@
 
     h2 {
       margin-top: 0;
-      font-size: 20px;
-      color: #333;
+      font-size: 18px;
+      font-weight: 600;
+      color: #212529;
+      margin-bottom: 12px;
     }
 
     label {
       display: block;
-      margin-top: 10px;
-      font-weight: bold;
+      margin-top: 14px;
+      font-weight: 600;
+      color: #495057;
+      font-size: 14px;
     }
 
     input {
       width: 100%;
-      padding: 10px;
-      margin-top: 4px;
-      border: 1px solid #ccc;
+      padding: 10px 12px;
+      margin-top: 5px;
+      border: 1px solid #ced4da;
       border-radius: 8px;
       font-size: 14px;
+      background: #f8f9fa;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #339af0;
+      box-shadow: 0 0 0 2px rgba(51,154,240,0.2);
+      background: #fff;
     }
 
     button {
       width: 100%;
-      padding: 12px;
+      padding: 14px;
       background: #081f2c;
       color: #fff;
       border: none;
       border-radius: 8px;
-      font-size: 16px;
-      margin-top: 20px;
+      font-size: 15px;
+      font-weight: 600;
+      margin-top: 24px;
       cursor: pointer;
+      transition: background 0.2s;
     }
 
     button:hover {
@@ -78,38 +102,45 @@
     }
 
     .log {
-      background: #000;
-      color: #0f0;
-      padding: 10px;
+      background: #111;
+      color: #39ff14;
+      padding: 12px;
       font-family: monospace;
       height: 520px;
       overflow-y: auto;
       border-radius: 8px;
       font-size: 13px;
-      white-space: pre-wrap;
-      word-wrap: break-word;
-      overflow-wrap: break-word;
-      white-space: pre-wrap;
-      word-wrap: break-word;
-      overflow-wrap: break-word;
-      overflow-x: hidden; 
+      border: 1px solid #333;
     }
 
     .log div {
-      margin-bottom: 8px;
+      margin-bottom: 10px;
       max-width: 100%;
-      word-break: break-word; 
+      word-break: break-word;
     }
 
+    #webhookFields input {
+      background: #f1f3f5;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+      }
+    }
   </style>
 </head>
 <body>
+
+  <!-- Logo centrado FUERA del contenedor -->
+  <div class="logo-wrapper">
+    <img src="https://cdn.paymentez.com/img/nv/nuvei_logo.png" alt="Nuvei Logo">
+  </div>
+
+  <!-- Contenedor principal -->
   <div class="container">
-    <div class="logo">
-            <img src="https://cdn.paymentez.com/img/nv/nuvei_logo.png" alt="Nuvei Logo">
-    </div>
     <div class="form-section">
-      <h2>Nuvei Fields</h2>
+      <h2>Configuración Nuvei</h2>
 
       <label for="apiKey">API Key:</label>
       <input id="apiKey" type="password" placeholder="X-API-KEY" required>
@@ -134,7 +165,7 @@
 
       <label for="useWebhook">
         <input type="checkbox" id="useWebhook">
-        Include webhook - Optional
+        Incluir Webhook (opcional)
       </label>
 
       <div id="webhookFields" style="display:none;">
@@ -142,16 +173,16 @@
         <input id="webhookUrl" placeholder="https://...">
 
         <label for="contentType">Content Type:</label>
-        <input id="contentType" placeholder="Ex: JSON" >
+        <input id="contentType" placeholder="Ej: JSON" value="JSON">
 
         <label for="deliveryMethod">Delivery Method:</label>
-        <input id="deliveryMethod" placeholder="Ex: POST" >
+        <input id="deliveryMethod" placeholder="Ej: POST" value="POST">
 
         <label for="sharedSecret">Shared Secret:</label>
-        <input id="sharedSecret" type="password" placeholder="Shared Secret">
+        <input id="sharedSecret" type="password" placeholder="Secreto compartido">
       </div>
 
-      <button onclick="start()">Submit</button>
+      <button onclick="start()">Ejecutar configuración</button>
     </div>
 
     <div class="log-section">
