@@ -162,10 +162,12 @@
       <label for="clientId">Client ID:</label>
       <input id="clientId">
 
-      <label for="useWebhook">
+      <div style="display: flex; align-items: center; gap: 8px; margin-top: 14px;">
         <input type="checkbox" id="useWebhook">
-        Include Webhook (optional)
-      </label>
+        <label for="useWebhook" style="margin: 0; font-weight: 600; color: #495057; font-size: 14px;">
+          Include Webhook (optional)
+        </label>
+      </div>
 
       <div id="webhookFields" style="display:none;">
         <label for="webhookUrl">Webhook URL:</label>
