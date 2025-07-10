@@ -119,6 +119,25 @@
       <label for="clientId">Client ID:</label>
       <input id="clientId">
 
+      <label for="useWebhook">
+        <input type="checkbox" id="useWebhook">
+        Incluir webhook (pasos 18 y 19)
+      </label>
+
+      <div id="webhookFields" style="display:none;">
+        <label for="webhookUrl">Webhook URL:</label>
+        <input id="webhookUrl" placeholder="https://...">
+
+        <label for="contentType">Content Type:</label>
+        <input id="contentType" placeholder="Ej: JSON" value="JSON">
+
+        <label for="deliveryMethod">Delivery Method:</label>
+        <input id="deliveryMethod" placeholder="Ej: POST" value="POST">
+
+        <label for="sharedSecret">Shared Secret:</label>
+        <input id="sharedSecret" placeholder="Secreto compartido">
+      </div>
+
       <button onclick="start()">Iniciar llamadas</button>
     </div>
 
@@ -233,8 +252,110 @@
         method: 'PUT',
         url: `${baseUrl}/account-api/configurations/entities/${processingEntityId}/payment-options/card`,
         body: null
+      },
+        {
+        method: 'PUT',
+        url: `${baseUrl}/apm-gw-connector-api/configurations/entities/${processingEntityId}/features/gateway-accounts`,
+        body: {
+          merchantId: inputs.merchantId,
+          merchantSiteId: inputs.merchantSiteId,
+          gatewayAccount: {
+            gatewayAccountName: inputs.gatewayName,
+            gatewayAccountStatus: "ACTIVE",
+            userName: inputs.userName,
+            password: inputs.password,
+            clientId: inputs.clientId,
+            clientName: inputs.gatewayName,
+            podId: 1
+          }
+        }
+      },
+      {
+        method: 'PUT',
+        url: `${baseUrl}/apm-gw-connector-api/configurations/gateway-accounts`,
+        body: {
+          gatewayAccountName: inputs.gatewayName,
+          gatewayAccountStatus: "ACTIVE",
+          userName: inputs.userName,
+          password: inputs.password,
+          clientId: inputs.clientId,
+          clientName: inputs.gatewayName,
+          podId: 1
+        }
+      },
+      {
+        method: 'PUT',
+        url: `${baseUrl}/apm-gw-connector-api/configurations/gateways`,
+        body: {
+          gatewayName: inputs.gatewayName,
+          gatewayStatus: "ONLINE",
+          uriScheme: "http",
+          uriHost: "process.sandbox.safecharge.com",
+          uriPort: 80,
+          uriPath: "/Service.asmx/Process",
+          uriRestPath: "/api/apmgw",
+          podId: 1,
+          gatewayProtocolVersion: "4.1.9"
+        }
+      },
+      {
+        method: 'PUT',
+        url: `${baseUrl}/apm-gw-connector-api/configurations/entities/${authorizingEntityId}/features/gateways`,
+        body: { gatewayName: inputs.gatewayName }
+      },
+      {
+        method: 'PUT',
+        url: `${baseUrl}/account-api/configurations/entities/${processingEntityId}/payment-options/PayPal`,
+        body: null
+      },
+      {
+        method: 'PUT',
+        url: `${baseUrl}/account-api/configurations/entities/${processingEntityId}/payment-options/card`,
+        body: null
+      },
+      {
+        method: 'PUT',
+        url: `${baseUrl}/account-api/configurations/entities/${processingEntityId}/features/entity-buyers`,
+        body: { isManagingBuyers: true }
+      },
+      {
+        method: 'PUT',
+        url: `${baseUrl}/account-api/configurations/entities/${processingEntityId}/features/payment-tokens-sharing-policies`,
+        body: { paymentTokenSharingPolicy: "SHARE_ALL" }
+      },
+      {
+        method: 'PUT',
+        url: `${baseUrl}/account-api/configurations/entities/${processingEntityId}/features/payment-tokens-uniqueness-policies`,
+        body: { paymentTokenUniquenessPolicy: "ALLOW_DUPLICATES" }
       }
     ];
+
+    // Si el checkbox está activado, añadimos pasos 18 y 19
+    if (!document.getElementById('webhookUrl').value.trim()) {
+      log("❌ Webhook URL requerido para activar pasos opcionales.");
+      return;
+    }
+
+    if (document.getElementById('useWebhook').checked) {
+      steps.push(
+        {
+          method: 'PUT',
+          url: `${baseUrl}/notifier-api/configurations/entities/${processingEntityId}/features/final-notifications`,
+          body: {
+            contentType: document.getElementById('contentType').value,
+            deliveryMethod: document.getElementById('deliveryMethod').value,
+            notificationUrl: document.getElementById('webhookUrl').value
+          }
+        },
+        {
+          method: 'PUT',
+          url: `${baseUrl}/notifier-api/configurations/entities/${processingEntityId}/features/shared-secrets`,
+          body: {
+            sharedSecret: document.getElementById('sharedSecret').value
+          }
+        }
+      );
+    }
 
 
     for (let i = 0; i < steps.length; i++) {
@@ -271,6 +392,10 @@
       log("🟢 Proceso finalizado.");
 
     }
+    document.getElementById('useWebhook').addEventListener('change', e => {
+    document.getElementById('webhookFields').style.display = e.target.checked ? 'block' : 'none';
+  });
+
   </script>
 </body>
 </html>

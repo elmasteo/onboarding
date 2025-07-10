@@ -1,0 +1,160 @@
+Paso a paso:
+1. {{url}}/entity-management-api/entities/{{authorizingEntityId}}
+body:
+{
+  "id": "{{authorizingEntityId}}",
+  "name": "DavidH LTD 333-2EXP"
+}
+
+2. {{url}}/entity-management-api/entities/{{processingEntityId}}
+body:
+{
+    "id": "{{processingEntityId}}",
+    "parentId": "{{authorizingEntityId}}",
+    "name": "Natalia Fierro"
+}
+
+3.{{url}}/auth-api/api-keys
+body:
+{
+  "scope": "operations",
+  "entityId": "{{authorizingEntityId}}",
+  "appId":"nss"
+}
+
+4.{{url}}/gw-connector-api/configurations/entities/{{processingEntityId}}/features/gateway-accounts
+body:
+{
+  "merchantId": 236498,
+  "merchantSiteId": 260178,
+  "gatewayAccount": {
+    "gatewayAccountName": "Natalia Fierro",
+    "gatewayAccountStatus": "ACTIVE",
+    "userName": "NataliaFierro",
+    "password": "H1HAAQtrDZ",
+    "clientId": 251006570,
+    "clientName": "Natalia Fierro",
+    "podId": 1
+  }
+}
+
+5. {{url}}/gw-connector-api/configurations/gateway-accounts
+body:
+{
+    "gatewayAccountName": "Natalia Fierro",
+    "gatewayAccountStatus": "ACTIVE",
+    "userName": "NataliaFierro",
+    "password": "H1HAAQtrDZ",
+    "clientId": 251006570,
+    "clientName": "Natalia Fierro",
+    "podId": 1
+  }
+
+6. {{url}}/gw-connector-api/configurations/gateways
+body:
+{
+  "gatewayName": "Natalia Fierro",
+  "gatewayStatus": "ONLINE",
+  "uriScheme": "https",
+  "uriHost": "process.sandbox.safecharge.com",
+  "uriPort": 443,
+  "uriPath": "/Service.asmx/Process",
+  "podId": 1,
+  "gatewayProtocolVersion": "4.1.9"
+}
+
+7. {{url}}/gw-connector-api/configurations/entities/{{authorizingEntityId}}/features/gateways
+body:
+{
+  "gatewayName": "Natalia Fierro"
+}
+
+8. {{url}}/account-api/configurations/entities/{{processingEntityId}}/payment-options/card
+body: null
+
+9. {{url}}/apm-gw-connector-api/configurations/entities/{{processingEntityId}}/features/gateway-accounts
+body:
+{
+  "merchantId": 239111,
+  "merchantSiteId": 288111,
+  "gatewayAccount": {
+    "gatewayAccountName": "Santiago Gomez",
+    "gatewayAccountStatus": "ACTIVE",
+    "userName": "SantiagoGomezSCXTRX",
+    "password": "PpLPkBfKWb",
+    "clientId": 251006840,
+    "clientName": "Santiago Gomez",
+    "podId": 1
+  }
+}
+
+10. {{url}}/apm-gw-connector-api/configurations/gateway-accounts
+body:
+{
+    "gatewayAccountName": "Santiago Gomez",
+    "gatewayAccountStatus": "ACTIVE",
+    "userName": "SantiagoGomezSCXTRX",
+    "password": "PpLPkBfKWb",
+    "clientId": 251006840,
+    "clientName": "Santiago Gomez",
+    "podId": 1
+  }
+
+11. {{url}}/apm-gw-connector-api/configurations/gateways
+body:
+{
+  "gatewayName": "Santiago Gomez",
+  "gatewayStatus": "ONLINE",
+  "uriScheme": "http",
+  "uriHost": "process.sandbox.safecharge.com",
+  "uriPort": 80,
+  "uriPath": "/Service.asmx/Process",
+  "uriRestPath": "/api/apmgw",
+  "podId": 1,
+  "gatewayProtocolVersion": "4.1.9"
+}
+
+12. {{url}}/apm-gw-connector-api/configurations/entities/{{authorizingEntityId}}/features/gateways
+body:
+{
+  "gatewayName": "Santiago Gomez"
+}
+
+13. {{url}}/account-api/configurations/entities/{{processingEntityId}}/payment-options/PayPal
+body: null
+
+14. {{url}}/account-api/configurations/entities/{{processingEntityId}}/payment-options/card
+body: null
+
+15. {{url}}/account-api/configurations/entities/{{processingEntityId}}/features/entity-buyers
+body:
+{
+  "isManagingBuyers": true
+}
+
+16. {{url}}/account-api/configurations/entities/{{processingEntityId}}/features/payment-tokens-sharing-policies
+body:
+{
+    "paymentTokenSharingPolicy": "SHARE_ALL"
+}
+
+17. {{url}}/account-api/configurations/entities/{{processingEntityId}}/features/payment-tokens-uniqueness-policies
+body:
+{
+  "paymentTokenUniquenessPolicy": "ALLOW_DUPLICATES"
+}
+
+//opcional si hay webhook
+18.{{url}}/notifier-api/configurations/entities/{{processingEntityId}}/features/final-notifications
+body:
+{
+  "contentType": "JSON",
+  "deliveryMethod": "POST",
+  "notificationUrl": "https://webhook.site/d3f0df5d-6921-481c-92b5-4c0880d8a4e2"
+}
+
+19. {{url}}/notifier-api/configurations/entities/{{processingEntityId}}/features/shared-secrets
+body:
+{
+  "sharedSecret": "secretKeyTest123"
+}
