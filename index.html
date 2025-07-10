@@ -383,8 +383,9 @@
       steps.push(
         {
           method: 'PUT',
-          url: `${baseUrl}/notifier-api/configurations/entities/${processingEntityId}/features/final-notifications`,
+          url: `${baseUrl}/notifier-api/configurations/entities/${processingEntityId}/features/confirmation-notifications`,
           body: {
+            confirmationType: "PRE_DEPOSIT"
             contentType: document.getElementById('contentType').value,
             deliveryMethod: document.getElementById('deliveryMethod').value,
             notificationUrl: document.getElementById('webhookUrl').value
