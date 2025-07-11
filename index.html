@@ -186,6 +186,12 @@
       <label for="clientId">Client ID:</label>
       <input id="clientId">
 
+      <label for="podId" id="podIdLabel" style="display:none;">POD ID:</label>
+      <select id="podId" style="display:none;">
+        <option value="1">1</option>
+        <option value="2">2</option>
+      </select>
+
       <label for="useWebhook">
         <input type="checkbox" id="useWebhook">
         Webhook fields (optional)
@@ -230,6 +236,9 @@
 
     async function start() {
       const baseUrl = document.getElementById('baseUrl').value;
+      const isProd = baseUrl === 'https://api.nuvei.com';
+      const podId = isProd ? parseInt(document.getElementById('podId').value, 10) : 1;
+
       const headers = {
         "Content-Type": "application/json",
         "X-API-KEY": document.getElementById('apiKey').value
@@ -296,17 +305,17 @@
           podId: 1
         }
       },
-      {
+     {
         method: 'PUT',
         url: `${baseUrl}/gw-connector-api/configurations/gateways`,
         body: {
           gatewayName: inputs.gatewayName,
           gatewayStatus: "ONLINE",
           uriScheme: "https",
-          uriHost: "process.sandbox.safecharge.com",
+          uriHost: isProd ? "process.safecharge.com" : "process.sandbox.safecharge.com",
           uriPort: 443,
           uriPath: "/Service.asmx/Process",
-          podId: 1,
+          podId,
           gatewayProtocolVersion: "4.1.9"
         }
       },
@@ -353,18 +362,31 @@
       {
         method: 'PUT',
         url: `${baseUrl}/apm-gw-connector-api/configurations/gateways`,
-        body: {
-          gatewayName: inputs.gatewayName,
-          gatewayStatus: "ONLINE",
-          uriScheme: "http",
-          uriHost: "process.sandbox.safecharge.com",
-          uriPort: 80,
-          uriPath: "/Service.asmx/Process",
-          uriRestPath: "/api/apmgw",
-          podId: 1,
-          gatewayProtocolVersion: "4.1.9"
-        }
-      },
+        body: isProd
+          ? {
+              gatewayName: inputs.gatewayName,
+              gatewayStatus: "ONLINE",
+              uriScheme: "https",
+              uriHost: "cn-apm",
+              uriPort: 443,
+              uriPath: "/APMService.asmx",
+              uriRestPath: "/api/v2/Transaction/ExecuteRequest",
+              podId,
+              gatewayProtocolVersion: "4.1.9"
+            }
+          : {
+              gatewayName: inputs.gatewayName,
+              gatewayStatus: "ONLINE",
+              uriScheme: "http",
+              uriHost: "process.sandbox.safecharge.com",
+              uriPort: 80,
+              uriPath: "/Service.asmx/Process",
+              uriRestPath: "/api/apmgw",
+              podId,
+              gatewayProtocolVersion: "4.1.9"
+            }
+      }
+      ,
       {
         method: 'PUT',
         url: `${baseUrl}/apm-gw-connector-api/configurations/entities/${authorizingEntityId}/features/gateways`,
@@ -462,6 +484,12 @@
     }
     document.getElementById('useWebhook').addEventListener('change', e => {
     document.getElementById('webhookFields').style.display = e.target.checked ? 'block' : 'none';
+  });
+
+  document.getElementById('baseUrl').addEventListener('change', e => {
+    const isProd = e.target.value === 'https://api.nuvei.com';
+    document.getElementById('podId').style.display = isProd ? 'block' : 'none';
+    document.getElementById('podIdLabel').style.display = isProd ? 'block' : 'none';
   });
 
   </script>
