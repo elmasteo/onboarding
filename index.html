@@ -238,7 +238,7 @@
       const baseUrl = document.getElementById('baseUrl').value;
       const isProd = baseUrl === 'https://api.nuvei.com';
       const podId = isProd ? parseInt(document.getElementById('podId').value, 10) : 1;
-
+      
       const headers = {
         "Content-Type": "application/json",
         "X-API-KEY": document.getElementById('apiKey').value
@@ -288,7 +288,7 @@
             password: inputs.password,
             clientId: inputs.clientId,
             clientName: inputs.gatewayName,
-            podId: 1
+            podId: podId
           }
         }
       },
@@ -302,7 +302,7 @@
           password: inputs.password,
           clientId: inputs.clientId,
           clientName: inputs.gatewayName,
-          podId: 1
+          podId: podId
         }
       },
      {
@@ -342,7 +342,7 @@
             password: inputs.password,
             clientId: inputs.clientId,
             clientName: inputs.gatewayName,
-            podId: 1
+            podId: podId
           }
         }
       },
