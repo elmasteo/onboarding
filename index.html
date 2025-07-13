@@ -466,7 +466,7 @@
         const text = await res.text();
 
         if (res.ok || res.status === 201) {
-          log(`✅ Step ${i + 1} OK: ${res.status}`);
+          log(`✅ Step ${i + 1} OK: ${res.status}\n${text}`);
         } else {
           log(`❌ Step ${i + 1} Failed: ${res.status}\n${text}`);
           break;
