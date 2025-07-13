@@ -419,13 +419,12 @@
       }
     ];
 
-    // Si el checkbox está activado, añadimos Steps 18 y 19
+    if (document.getElementById('useWebhook').checked) {
+        // Si el checkbox está activado, añadimos Steps 18 y 19
     if (!document.getElementById('webhookUrl').value.trim()) {
       log("❌ The Webhook URL is required to proceed.");
       return;
     }
-
-    if (document.getElementById('useWebhook').checked) {
       steps.push(
         {
           method: 'PUT',
