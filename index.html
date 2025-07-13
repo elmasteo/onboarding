@@ -238,7 +238,7 @@
       const baseUrl = document.getElementById('baseUrl').value;
       const isProd = baseUrl === 'https://api.nuvei.com';
       const podId = isProd ? parseInt(document.getElementById('podId').value, 10) : 1;
-      
+
       const headers = {
         "Content-Type": "application/json",
         "X-API-KEY": document.getElementById('apiKey').value
@@ -466,7 +466,7 @@
         const text = await res.text();
 
         if (res.ok || res.status === 201) {
-          log(`✅ Step ${i + 1} OK: ${res.status}\n${text}`);
+          log(`✅ Step ${i + 1} OK: ${res.status}`);
         } else {
           log(`❌ Step ${i + 1} Failed: ${res.status}\n${text}`);
           break;
