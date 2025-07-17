@@ -234,16 +234,9 @@
     </div>
   </div>
 
-<script>
+  <script>
   document.querySelectorAll('ul li a').forEach(link => {
-    const href = link.getAttribute('href');
-    const path = window.location.pathname;
-
-    // Detecta si es la página de inicio o la de massive
-    const isIndex = path === '/' || path === '/index.html';
-    const isMassive = path === '/massive' || path === '/massive.html';
-
-    if ((isIndex && href === 'index.html') || (isMassive && href === 'massive.html')) {
+    if (window.location.href.includes(link.getAttribute('href'))) {
       link.classList.add('active');
     }
   });
