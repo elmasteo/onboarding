@@ -206,8 +206,8 @@
   <!-- Barra de tabs alineada con el contenedor -->
   <div class="tab-wrapper">
     <ul>
-      <li><a href="index.html">Single</a></li>
-      <li><a href="massive.html">Massive</a></li>
+      <li><a class="index" href="index.html">Single</a></li>
+      <li><a class="massive" href="massive.html">Massive</a></li>
     </ul>
   </div>
 
@@ -234,14 +234,15 @@
     </div>
   </div>
 
-  <script>
+<script>
+  const path = window.location.pathname.replace('/', '').replace('.html', '') || 'index';
+
   document.querySelectorAll('ul li a').forEach(link => {
-    if (window.location.href.includes(link.getAttribute('href'))) {
+    if (link.classList.contains(path)) {
       link.classList.add('active');
     }
   });
 </script>
-
 
  <script>
     const log = (msg) => {
