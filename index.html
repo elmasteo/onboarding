@@ -145,6 +145,43 @@
       box-shadow: 0 0 0 2px rgba(51,154,240,0.2);
       background: #fff;
     }
+    .tab-wrapper {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 20px 0;
+      display: flex;
+      gap: 12px;
+      border-bottom: 2px solid #dee2e6;
+      max-width: 960px;
+      width: 100%;
+    }
+
+    ul li a {
+      display: inline-block;
+      padding: 10px 18px;
+      border-radius: 8px 8px 0 0;
+      text-decoration: none;
+      color: #495057;
+      background: #f1f3f5;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    ul li a:hover {
+      background: #e9ecef;
+      color: #212529;
+    }
+
+    ul li a.active {
+      background: #081f2c;
+      color: #fff;
+    }
 
   </style>
 </head>
@@ -153,6 +190,13 @@
   <!-- Logo centrado FUERA del contenedor -->
   <div class="logo-wrapper">
     <img src="https://cdn.paymentez.com/img/nv/nuvei_logo.png" alt="Nuvei Logo">
+  </div>
+    <!-- Barra de tabs alineada con el contenedor -->
+  <div class="tab-wrapper">
+    <ul>
+      <li><a href="index.html">Single</a></li>
+      <li><a href="massive.html">Massive</a></li>
+    </ul>
   </div>
 
   <!-- Contenedor principal -->
@@ -219,6 +263,14 @@
       <div class="log" id="logBox"></div>
     </div>
   </div>
+
+  <script>
+  document.querySelectorAll('ul li a').forEach(link => {
+    if (window.location.href.includes(link.getAttribute('href'))) {
+      link.classList.add('active');
+    }
+  });
+</script>
 
   <script>
     const log = (msg) => {
