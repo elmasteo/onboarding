@@ -234,9 +234,10 @@
     </div>
   </div>
 
-  <script>
+<script>
   document.querySelectorAll('ul li a').forEach(link => {
-    if (window.location.href.includes(link.getAttribute('href'))) {
+    const currentPage = window.location.pathname.split('/').pop();
+    if (link.getAttribute('href') === currentPage) {
       link.classList.add('active');
     }
   });
