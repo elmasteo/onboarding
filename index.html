@@ -266,11 +266,10 @@
 
 <script>
   document.querySelectorAll('ul li a').forEach(link => {
-    const href = link.getAttribute('href');
-    const path = window.location.pathname;
-    const currentPage = path === '/' || path === '' ? 'index.html' : path.split('/').pop();
+    const href = link.getAttribute('href').replace('.html', '').replace('index', '');
+    const path = window.location.pathname.replace('.html', '').replace('/', '');
 
-    if (href === currentPage) {
+    if (href === path || (href === '' && (path === '' || path === 'index'))) {
       link.classList.add('active');
     }
   });
