@@ -266,12 +266,17 @@
 
 <script>
   document.querySelectorAll('ul li a').forEach(link => {
-    const currentPage = window.location.pathname.split('/').pop();
-    if (link.getAttribute('href') === currentPage) {
+    const href = link.getAttribute('href');
+    const currentPage = window.location.pathname.replace('/', '') || 'index.html';
+      ? 'index.html' 
+      : window.location.pathname.split('/').pop();
+    
+    if (href === currentPage) {
       link.classList.add('active');
     }
   });
 </script>
+
 
   <script>
     const log = (msg) => {
