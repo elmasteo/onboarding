@@ -370,7 +370,8 @@
           uriPort: 443,
           uriPath: "/Service.asmx/Process",
           podId,
-          gatewayProtocolVersion: "4.1.9"
+          gatewayProtocolVersion: "4.1.9",
+          cardRecognitionService: isProd ? "https://cn-extws:4437/api/CardRecognition/" : "https://cardrecognition.sandbox.safecharge.com/api/CardRecognition/"
         }
       },
       {
