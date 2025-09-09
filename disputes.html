@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" href="https://docs.nuvei.com/wp-content/themes/manual-child/img/favicons/cropped-favicon-nuvei-32x32.png" sizes="32x32" />
+  <title>Nuvei API Executor Massive</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #e9ecef;
+      padding: 40px 20px;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .logo-wrapper {
+      width: 100%;
+      max-width: 1000px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .logo-wrapper img {
+      max-width: 180px;
+      height: auto;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+    }
+
+    .container {
+      max-width: 1000px;
+      width: 100%;
+      background: #fff;
+      padding: 24px;
+      border-radius: 14px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      display: flex;
+      gap: 24px;
+    }
+
+    .form-section,
+    .log-section {
+      flex: 1;
+      min-width: 300px;
+    }
+
+    h2 {
+      margin-top: 0;
+      font-size: 18px;
+      font-weight: 600;
+      color: #212529;
+      margin-bottom: 12px;
+    }
+
+    label {
+      display: block;
+      margin-top: 14px;
+      font-weight: 600;
+      color: #495057;
+      font-size: 14px;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 10px 12px;
+      margin-top: 5px;
+      border: 1px solid #ced4da;
+      border-radius: 8px;
+      font-size: 14px;
+      background: #f8f9fa;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input:focus,
+    select:focus {
+      outline: none;
+      border-color: #339af0;
+      box-shadow: 0 0 0 2px rgba(51, 154, 240, 0.2);
+      background: #fff;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      background: #081f2c;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      margin-top: 24px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button:hover {
+      background: #175b81;
+    }
+
+    .log {
+      background: #111;
+      color: #39ff14;
+      padding: 12px;
+      font-family: monospace;
+      height: 700px;
+      overflow-y: auto;
+      border-radius: 8px;
+      font-size: 13px;
+      border: 1px solid #333;
+    }
+
+    .log div {
+      margin-bottom: 10px;
+      max-width: 100%;
+      word-break: break-word;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+      }
+    }
+    .tab-wrapper {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 20px 0;
+      display: flex;
+      gap: 12px;
+      border-bottom: 2px solid #dee2e6;
+      max-width: 960px;
+      width: 100%;
+    }
+
+    ul li a {
+      display: inline-block;
+      padding: 10px 18px;
+      border-radius: 8px 8px 0 0;
+      text-decoration: none;
+      color: #495057;
+      background: #f1f3f5;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    ul li a:hover {
+      background: #e9ecef;
+      color: #212529;
+    }
+
+    ul li a.active {
+      background: #081f2c;
+      color: #fff;
+    }
+
+    input[type="file"] {
+      width: calc(100% - 22px);
+      padding: 10px;
+      margin: 20px auto;
+      border: 2px solid #091f2d;
+      border-radius: 10px;
+      display: block;
+      font-size: 16px;
+      color: #091f2d;
+      background-color: #f9f9f9;
+      cursor: pointer;
+    }
+
+    input[type="file"]::file-selector-button {
+      background: #091f2d;
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    input[type="file"]::file-selector-button:hover {
+      background: #091f2d;
+    }
+    .download-btn {
+      display: inline-block;
+      background-color: #081f2c;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 15px;
+      margin-top: 16px;
+      transition: background 0.2s;
+    }
+
+    .download-btn:hover {
+      background-color: #175b81;
+    }
+
+  </style>
+</head>
+
+<body>
+  <div class="logo-wrapper">
+    <img src="https://cdn.paymentez.com/img/nv/nuvei_logo.png" alt="Nuvei Logo" />
+  </div>
+
+  <!-- Barra de tabs alineada con el contenedor -->
+  <div class="tab-wrapper">
+    <ul>
+      <li><a class="index" href="index.html">Single</a></li>
+      <li><a class="massive" href="massive.html">Massive</a></li>
+      <li><a class="disputes" href="disputes.html">Disputes</a></li>
+    </ul>
+  </div>
+
+  <div class="container">
+    <div class="form-section">
+      <a href="disputes-template.xlsx" download class="download-btn">Download format</a>
+      <label for="baseUrl">Base URL:</label>
+      <select id="baseUrl">
+        <option value="https://api-sandbox.nuvei.com">https://api-sandbox.nuvei.com - INT</option>
+        <option value="https://api.nuvei.com">https://api.nuvei.com - PROD</option>
+      </select>
+
+      <label for="apiKey">API Key:</label>
+      <input id="apiKey" type="password" placeholder="X-API-KEY" required />
+
+      <label for="excelFile">Excel File:</label>
+      <input id="excelFile" type="file" accept=".xlsx" />
+
+      <button id="procesar">Submit</button>
+    </div>
+
+    <div class="log-section">
+      <h2>Log</h2>
+      <div class="log" id="logBox"></div>
+    </div>
+  </div>
+
+<script>
+  const path = window.location.pathname.replace('/', '').replace('.html', '') || 'index';
+
+  document.querySelectorAll('ul li a').forEach(link => {
+    if (link.classList.contains(path)) {
+      link.classList.add('active');
+    }
+  });
+</script>
+
+<script>
+  const log = (msg) => {
+    const logBox = document.getElementById('logBox');
+    const entry = document.createElement('div');
+    entry.textContent = msg;
+    logBox.appendChild(entry);
+    logBox.scrollTop = logBox.scrollHeight;
+  };
+
+  document.getElementById('procesar').addEventListener('click', async () => {
+    const baseUrl = document.getElementById('baseUrl').value;
+    const apiKey = document.getElementById('apiKey').value.trim();
+    const fileInput = document.getElementById('excelFile');
+
+    if (!fileInput.files.length) {
+      alert('Select an Excel file!');
+      return;
+    }
+    if (!apiKey) {
+      alert('The API-KEY can not be blank');
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = async (e) => {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      const rows = XLSX.utils.sheet_to_json(sheet, { raw: true });
+
+      if (!rows.length) {
+        alert('The file is empty or broken');
+        return;
+      }
+
+      const resultados = [];
+
+      for (const [index, row] of rows.entries()) {
+        const {
+          processingEntityId,
+          authorizingEntityId,
+          name,
+          multiClientId,
+          clientId,
+        } = row;
+
+        if (!processingEntityId || !authorizingEntityId || !multiClientId || !clientId) {
+          log(`❌ Row ${index + 2} missing required fields, skipping`);
+          continue;
+        }
+
+        log(`➡️ Row ${index + 2}: PUT Entity ${processingEntityId}`);
+
+        const url = `${baseUrl}/entity-management-api/entities/${processingEntityId}`;
+        const body = {
+          id: processingEntityId,
+          parentId: authorizingEntityId,
+          name: name || "REST 2.0 Test",
+          externalIds: {
+            multiClientId: multiClientId.toString(),
+            clientId: clientId.toString()
+          }
+        };
+
+        try {
+          const res = await fetch('/.netlify/functions/proxy', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              url,
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-API-KEY': apiKey,
+              },
+              body,
+            }),
+          });
+
+          const text = await res.text();
+
+          if (res.ok || res.status === 201) {
+            log(`✅ Row ${index + 2} OK: ${res.status}`);
+            resultados.push({ processingEntityId, status: 'OK' });
+          } else {
+            log(`❌ Row ${index + 2} Failed: ${res.status} - ${text}`);
+            resultados.push({ processingEntityId, status: 'FAILED', error: text });
+          }
+        } catch (err) {
+          log(`❌ Row ${index + 2} Error: ${err.message}`);
+          resultados.push({ processingEntityId, status: 'ERROR', error: err.message });
+        }
+
+        await new Promise((r) => setTimeout(r, 200)); // para no saturar
+      }
+
+      // Excel de resultados
+      const ws = XLSX.utils.json_to_sheet(resultados);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Results');
+      const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+      const blob = new Blob([wbout], { type: 'application/octet-stream' });
+      saveAs(blob, 'results_disputes_nuvei.xlsx');
+
+      log('🟢 Execution completed and file generated!');
+    };
+
+    reader.readAsArrayBuffer(fileInput.files[0]);
+  });
+</script>
+
+</body>
+</html>
