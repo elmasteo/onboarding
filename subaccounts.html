@@ -241,6 +241,9 @@
       <label for="authorizingEntityId">Authorizing Entity ID:</label>
       <input id="authorizingEntityId" type="text" placeholder="UUID" required />
 
+      <label for="merchantId">Merchant ID:</label>
+      <input id="merchantId" type="text" placeholder="Merchant ID" required />
+
       <label for="excelFile">Excel File:</label>
       <input id="excelFile" type="file" accept=".xlsx" />
 
@@ -277,120 +280,123 @@
       (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16)
     );
 
-  document.getElementById('procesar').addEventListener('click', async () => {
-    const baseUrl = document.getElementById('baseUrl').value;
-    const apiKey = document.getElementById('apiKey').value.trim();
-    const authorizingEntityId = document.getElementById('authorizingEntityId').value.trim();
-    const fileInput = document.getElementById('excelFile');
+document.getElementById('procesar').addEventListener('click', async () => {
+  const baseUrl = document.getElementById('baseUrl').value;
+  const apiKey = document.getElementById('apiKey').value.trim();
+  const authorizingEntityId = document.getElementById('authorizingEntityId').value.trim();
+  const merchantId = document.getElementById('merchantId').value.trim(); // <--- nuevo
+  const fileInput = document.getElementById('excelFile');
 
-    if (!fileInput.files.length) return alert('Select an Excel file!');
-    if (!apiKey || !authorizingEntityId) return alert('All fields are required!');
+  if (!fileInput.files.length) return alert('Select an Excel file!');
+  if (!apiKey || !authorizingEntityId || !merchantId) return alert('All fields are required!');
 
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const data = new Uint8Array(e.target.result);
-      const workbook = XLSX.read(data, { type: 'array' });
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json(sheet, { raw: true });
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const data = new Uint8Array(e.target.result);
+    const workbook = XLSX.read(data, { type: 'array' });
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet, { raw: true });
 
-      const resultados = [];
-      for (const [index, row] of rows.entries()) {
-        const { merchantId, merchantSiteId, gatewayName, userName, password, clientId, podId } = row;
-        if (!merchantId || !merchantSiteId || !gatewayName || !userName || !password || !clientId) {
-          log(`❌ Row ${index+2}: missing required fields`);
-          continue;
+    const resultados = [];
+    for (const [index, row] of rows.entries()) {
+      // QUITAMOS merchantId de aquí
+      const { merchantSiteId, gatewayName, userName, password, clientId, podId } = row;
+      if (!merchantSiteId || !gatewayName || !userName || !password || !clientId) {
+        log(`❌ Row ${index+2}: missing required fields`);
+        continue;
+      }
+      const processingEntityId = uuid();
+      const pod = podId ? parseInt(podId, 10) : 1;
+
+      log(`➡️ Row ${index+2}: Creating processingEntityId=${processingEntityId}`);
+
+      const steps = [
+        {
+          url: `${baseUrl}/entity-management-api/entities/${processingEntityId}`,
+          method: 'PUT',
+          body: { id: processingEntityId, parentId: authorizingEntityId, name: gatewayName }
+        },
+        {
+          url: `${baseUrl}/gw-connector-api/configurations/entities/${processingEntityId}/features/gateway-accounts`,
+          method: 'PUT',
+          body: { merchantId, merchantSiteId, gatewayAccount: {
+            gatewayAccountName: gatewayName, gatewayAccountStatus:'ACTIVE',
+            userName, password, clientId, clientName: gatewayName, podId: pod
+          }}
+        },
+        {
+          url: `${baseUrl}/account-api/configurations/entities/${processingEntityId}/payment-options/card`,
+          method: 'PUT',
+          body: null
+        },
+        {
+          url: `${baseUrl}/apm-gw-connector-api/configurations/entities/${processingEntityId}/features/gateway-accounts`,
+          method: 'PUT',
+          body: { merchantId, merchantSiteId, gatewayAccount: {
+            gatewayAccountName: gatewayName, gatewayAccountStatus:'ACTIVE',
+            userName, password, clientId, clientName: gatewayName, podId: pod
+          }}
+        },
+        {
+          url: `${baseUrl}/account-api/configurations/entities/${processingEntityId}/payment-options/card`,
+          method: 'PUT',
+          body: null
+        },
+        {
+          url: `${baseUrl}/account-api/configurations/entities/${processingEntityId}/features/entity-buyers`,
+          method: 'PUT',
+          body: { isManagingBuyers: true }
+        },
+        {
+          url: `${baseUrl}/account-api/configurations/entities/${processingEntityId}/features/payment-tokens-sharing-policies`,
+          method: 'PUT',
+          body: { paymentTokenSharingPolicy: 'SHARE_ALL' }
+        },
+        {
+          url: `${baseUrl}/account-api/configurations/entities/${processingEntityId}/features/payment-tokens-uniqueness-policies`,
+          method: 'PUT',
+          body: { paymentTokenUniquenessPolicy: 'ALLOW_DUPLICATES' }
         }
-        const processingEntityId = uuid();
-        const pod = podId ? parseInt(podId, 10) : 1;
+      ];
 
-        log(`➡️ Row ${index+2}: Creating processingEntityId=${processingEntityId}`);
-
-        const steps = [
-          {
-            url: `${baseUrl}/entity-management-api/entities/${processingEntityId}`,
-            method: 'PUT',
-            body: { id: processingEntityId, parentId: authorizingEntityId, name: gatewayName }
-          },
-          {
-            url: `${baseUrl}/gw-connector-api/configurations/entities/${processingEntityId}/features/gateway-accounts`,
-            method: 'PUT',
-            body: { merchantId, merchantSiteId, gatewayAccount: {
-              gatewayAccountName: gatewayName, gatewayAccountStatus:'ACTIVE',
-              userName, password, clientId, clientName: gatewayName, podId: pod
-            }}
-          },
-          {
-            url: `${baseUrl}/account-api/configurations/entities/${processingEntityId}/payment-options/card`,
-            method: 'PUT',
-            body: null
-          },
-          {
-            url: `${baseUrl}/apm-gw-connector-api/configurations/entities/${processingEntityId}/features/gateway-accounts`,
-            method: 'PUT',
-            body: { merchantId, merchantSiteId, gatewayAccount: {
-              gatewayAccountName: gatewayName, gatewayAccountStatus:'ACTIVE',
-              userName, password, clientId, clientName: gatewayName, podId: pod
-            }}
-          },
-          {
-            url: `${baseUrl}/account-api/configurations/entities/${processingEntityId}/payment-options/card`,
-            method: 'PUT',
-            body: null
-          },
-          {
-            url: `${baseUrl}/account-api/configurations/entities/${processingEntityId}/features/entity-buyers`,
-            method: 'PUT',
-            body: { isManagingBuyers: true }
-          },
-          {
-            url: `${baseUrl}/account-api/configurations/entities/${processingEntityId}/features/payment-tokens-sharing-policies`,
-            method: 'PUT',
-            body: { paymentTokenSharingPolicy: 'SHARE_ALL' }
-          },
-          {
-            url: `${baseUrl}/account-api/configurations/entities/${processingEntityId}/features/payment-tokens-uniqueness-policies`,
-            method: 'PUT',
-            body: { paymentTokenUniquenessPolicy: 'ALLOW_DUPLICATES' }
-          }
-        ];
-
-        let success = true;
-        for (let i=0; i<steps.length; i++) {
-          const {url, method, body} = steps[i];
-          log(`➡️ Step ${i+1} ${method} ${url}`);
-          try {
-            const res = await fetch('/.netlify/functions/proxy', {
-              method: 'POST',
-              headers: {'Content-Type':'application/json'},
-              body: JSON.stringify({ url, method, headers:{'Content-Type':'application/json','X-API-KEY':apiKey}, body })
-            });
-            const text = await res.text();
-            if (res.ok) {
-              log(`✅ Step ${i+1} OK`);
-            } else {
-              log(`❌ Step ${i+1} Failed ${res.status} ${text}`);
-              success=false; break;
-            }
-          } catch(err) {
-            log(`❌ Step ${i+1} Error ${err.message}`);
+      let success = true;
+      for (let i=0; i<steps.length; i++) {
+        const {url, method, body} = steps[i];
+        log(`➡️ Step ${i+1} ${method} ${url}`);
+        try {
+          const res = await fetch('/.netlify/functions/proxy', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ url, method, headers:{'Content-Type':'application/json','X-API-KEY':apiKey}, body })
+          });
+          const text = await res.text();
+          if (res.ok) {
+            log(`✅ Step ${i+1} OK`);
+          } else {
+            log(`❌ Step ${i+1} Failed ${res.status} ${text}`);
             success=false; break;
           }
+        } catch(err) {
+          log(`❌ Step ${i+1} Error ${err.message}`);
+          success=false; break;
         }
-
-        resultados.push({ processingEntityId, gatewayName, status: success?'OK':'FAILED' });
-        await new Promise(r=>setTimeout(r,200));
       }
 
-      const ws = XLSX.utils.json_to_sheet(resultados);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Results');
-      const wbout = XLSX.write(wb, { bookType:'xlsx', type:'array' });
-      saveAs(new Blob([wbout], {type:'application/octet-stream'}), 'results_subaccounts.xlsx');
+      resultados.push({ processingEntityId, gatewayName, status: success?'OK':'FAILED' });
+      await new Promise(r=>setTimeout(r,200));
+    }
 
-      log('🟢 Finished and results exported!');
-    };
-    reader.readAsArrayBuffer(fileInput.files[0]);
-  });
+    const ws = XLSX.utils.json_to_sheet(resultados);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Results');
+    const wbout = XLSX.write(wb, { bookType:'xlsx', type:'array' });
+    saveAs(new Blob([wbout], {type:'application/octet-stream'}), 'results_subaccounts.xlsx');
+
+    log('🟢 Finished and results exported!');
+  };
+  reader.readAsArrayBuffer(fileInput.files[0]);
+});
+
 </script>
 </body>
 </html>
