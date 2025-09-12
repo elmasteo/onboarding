@@ -2,9 +2,8 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" href="https://docs.nuvei.com/wp-content/themes/manual-child/img/favicons/cropped-favicon-nuvei-32x32.png" sizes="32x32" />
-  <title>Nuvei API Executor Massive</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <title>Nuvei - Subaccounts</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <style>
@@ -212,7 +211,6 @@
 
   </style>
 </head>
-
 <body>
   <div class="logo-wrapper">
     <img src="https://cdn.paymentez.com/img/nv/nuvei_logo.png" alt="Nuvei Logo" />
@@ -229,15 +227,18 @@
 
   <div class="container">
     <div class="form-section">
-      <a href="disputes-template.xlsx" download class="download-btn">Download format</a>
+      <a href="subaccounts.xlsx" download class="download-btn">Download format</a>
       <label for="baseUrl">Base URL:</label>
       <select id="baseUrl">
-        <option value="https://api-sandbox.nuvei.com">https://api-sandbox.nuvei.com - INT</option>
-        <option value="https://api.nuvei.com">https://api.nuvei.com - PROD</option>
+        <option value="https://api-sandbox.nuvei.com">Sandbox</option>
+        <option value="https://api.nuvei.com">Production</option>
       </select>
 
       <label for="apiKey">API Key:</label>
       <input id="apiKey" type="password" placeholder="X-API-KEY" required />
+
+      <label for="authorizingEntityId">Authorizing Entity ID:</label>
+      <input id="authorizingEntityId" type="text" placeholder="UUID" required />
 
       <label for="excelFile">Excel File:</label>
       <input id="excelFile" type="file" accept=".xlsx" />
@@ -270,109 +271,125 @@
     logBox.scrollTop = logBox.scrollHeight;
   };
 
+  const uuid = () =>
+    ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+      (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16)
+    );
+
   document.getElementById('procesar').addEventListener('click', async () => {
     const baseUrl = document.getElementById('baseUrl').value;
     const apiKey = document.getElementById('apiKey').value.trim();
+    const authorizingEntityId = document.getElementById('authorizingEntityId').value.trim();
     const fileInput = document.getElementById('excelFile');
 
-    if (!fileInput.files.length) {
-      alert('Select an Excel file!');
-      return;
-    }
-    if (!apiKey) {
-      alert('The API-KEY can not be blank');
-      return;
-    }
+    if (!fileInput.files.length) return alert('Select an Excel file!');
+    if (!apiKey || !authorizingEntityId) return alert('All fields are required!');
 
     const reader = new FileReader();
-
     reader.onload = async (e) => {
       const data = new Uint8Array(e.target.result);
       const workbook = XLSX.read(data, { type: 'array' });
-      const sheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[sheetName];
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json(sheet, { raw: true });
 
-      if (!rows.length) {
-        alert('The file is empty or broken');
-        return;
-      }
-
       const resultados = [];
-
       for (const [index, row] of rows.entries()) {
-        const {
-          processingEntityId,
-          authorizingEntityId,
-          name,
-          multiClientId,
-          clientId,
-        } = row;
-
-        if (!processingEntityId || !authorizingEntityId || !multiClientId || !clientId) {
-          log(`❌ Row ${index + 2} missing required fields, skipping`);
+        const { merchantId, merchantSiteId, gatewayName, userName, password, clientId, podId } = row;
+        if (!merchantId || !merchantSiteId || !gatewayName || !userName || !password || !clientId) {
+          log(`❌ Row ${index+2}: missing required fields`);
           continue;
         }
+        const processingEntityId = uuid();
+        const pod = podId ? parseInt(podId, 10) : 1;
 
-        log(`➡️ Row ${index + 2}: PUT Entity ${processingEntityId}`);
+        log(`➡️ Row ${index+2}: Creating processingEntityId=${processingEntityId}`);
 
-        const url = `${baseUrl}/entity-management-api/entities/${processingEntityId}`;
-        const body = {
-          id: processingEntityId,
-          parentId: authorizingEntityId,
-          name: name || "REST 2.0 Test",
-          externalIds: {
-            multiClientId: multiClientId.toString(),
-            clientId: clientId.toString()
+        const steps = [
+          {
+            url: `${baseUrl}/entity-management-api/entities/${processingEntityId}`,
+            method: 'PUT',
+            body: { id: processingEntityId, parentId: authorizingEntityId, name: gatewayName }
+          },
+          {
+            url: `${baseUrl}/gw-connector-api/configurations/entities/${processingEntityId}/features/gateway-accounts`,
+            method: 'PUT',
+            body: { merchantId, merchantSiteId, gatewayAccount: {
+              gatewayAccountName: gatewayName, gatewayAccountStatus:'ACTIVE',
+              userName, password, clientId, clientName: gatewayName, podId: pod
+            }}
+          },
+          {
+            url: `${baseUrl}/account-api/configurations/entities/${processingEntityId}/payment-options/card`,
+            method: 'PUT',
+            body: null
+          },
+          {
+            url: `${baseUrl}/apm-gw-connector-api/configurations/entities/${processingEntityId}/features/gateway-accounts`,
+            method: 'PUT',
+            body: { merchantId, merchantSiteId, gatewayAccount: {
+              gatewayAccountName: gatewayName, gatewayAccountStatus:'ACTIVE',
+              userName, password, clientId, clientName: gatewayName, podId: pod
+            }}
+          },
+          {
+            url: `${baseUrl}/account-api/configurations/entities/${processingEntityId}/payment-options/card`,
+            method: 'PUT',
+            body: null
+          },
+          {
+            url: `${baseUrl}/account-api/configurations/entities/${processingEntityId}/features/entity-buyers`,
+            method: 'PUT',
+            body: { isManagingBuyers: true }
+          },
+          {
+            url: `${baseUrl}/account-api/configurations/entities/${processingEntityId}/features/payment-tokens-sharing-policies`,
+            method: 'PUT',
+            body: { paymentTokenSharingPolicy: 'SHARE_ALL' }
+          },
+          {
+            url: `${baseUrl}/account-api/configurations/entities/${processingEntityId}/features/payment-tokens-uniqueness-policies`,
+            method: 'PUT',
+            body: { paymentTokenUniquenessPolicy: 'ALLOW_DUPLICATES' }
           }
-        };
+        ];
 
-        try {
-          const res = await fetch('/.netlify/functions/proxy', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              url,
-              method: 'PUT',
-              headers: {
-                'Content-Type': 'application/json',
-                'X-API-KEY': apiKey,
-              },
-              body,
-            }),
-          });
-
-          const text = await res.text();
-
-          if (res.ok || res.status === 201) {
-            log(`✅ Row ${index + 2} OK: ${res.status}`);
-            resultados.push({ processingEntityId, status: 'OK' });
-          } else {
-            log(`❌ Row ${index + 2} Failed: ${res.status} - ${text}`);
-            resultados.push({ processingEntityId, status: 'FAILED', error: text });
+        let success = true;
+        for (let i=0; i<steps.length; i++) {
+          const {url, method, body} = steps[i];
+          log(`➡️ Step ${i+1} ${method} ${url}`);
+          try {
+            const res = await fetch('/.netlify/functions/proxy', {
+              method: 'POST',
+              headers: {'Content-Type':'application/json'},
+              body: JSON.stringify({ url, method, headers:{'Content-Type':'application/json','X-API-KEY':apiKey}, body })
+            });
+            const text = await res.text();
+            if (res.ok) {
+              log(`✅ Step ${i+1} OK`);
+            } else {
+              log(`❌ Step ${i+1} Failed ${res.status} ${text}`);
+              success=false; break;
+            }
+          } catch(err) {
+            log(`❌ Step ${i+1} Error ${err.message}`);
+            success=false; break;
           }
-        } catch (err) {
-          log(`❌ Row ${index + 2} Error: ${err.message}`);
-          resultados.push({ processingEntityId, status: 'ERROR', error: err.message });
         }
 
-        await new Promise((r) => setTimeout(r, 200)); // para no saturar
+        resultados.push({ processingEntityId, gatewayName, status: success?'OK':'FAILED' });
+        await new Promise(r=>setTimeout(r,200));
       }
 
-      // Excel de resultados
       const ws = XLSX.utils.json_to_sheet(resultados);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Results');
-      const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-      const blob = new Blob([wbout], { type: 'application/octet-stream' });
-      saveAs(blob, 'results_disputes_nuvei.xlsx');
+      const wbout = XLSX.write(wb, { bookType:'xlsx', type:'array' });
+      saveAs(new Blob([wbout], {type:'application/octet-stream'}), 'results_subaccounts.xlsx');
 
-      log('🟢 Execution completed and file generated!');
+      log('🟢 Finished and results exported!');
     };
-
     reader.readAsArrayBuffer(fileInput.files[0]);
   });
 </script>
-
 </body>
 </html>
