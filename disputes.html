@@ -253,85 +253,88 @@
   </div>
 
 <script>
-  const path = window.location.pathname.replace('/', '').replace('.html', '') || 'index';
+  const log = (msg) => {
+    const logBox = document.getElementById('logBox');
+    const entry = document.createElement('div');
+    entry.textContent = msg;
+    logBox.appendChild(entry);
+    logBox.scrollTop = logBox.scrollHeight;
+  };
 
-  document.querySelectorAll('ul li a').forEach(link => {
-    if (link.classList.contains(path)) {
-      link.classList.add('active');
-    }
-  });
-</script>
+  const uuid = () =>
+    ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, (c) =>
+      (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16)
+    );
 
- <script>
-    const log = (msg) => {
-      const logBox = document.getElementById('logBox');
-      const entry = document.createElement('div');
-      entry.textContent = msg;
-      logBox.appendChild(entry);
-      logBox.scrollTop = logBox.scrollHeight;
-    };
+  document.getElementById('procesar').addEventListener('click', async () => {
+    const baseUrl = document.getElementById('baseUrl').value;
+    const apiKey = document.getElementById('apiKey').value.trim();
+    const fileInput = document.getElementById('excelFile');
 
-    const uuid = () =>
-      ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, (c) =>
-        (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16)
-      );
+    if (!fileInput.files.length) return alert('Select an Excel file!');
+    if (!apiKey) return alert('The API-KEY can not be blank');
 
-    document.getElementById('procesar').addEventListener('click', async () => {
-      const baseUrl = document.getElementById('baseUrl').value;
-      const apiKey = document.getElementById('apiKey').value.trim();
-      const fileInput = document.getElementById('excelFile');
+    const reader = new FileReader();
 
-      if (!fileInput.files.length) {
-        alert('Select and excel file!');
-        return;
-      }
-      if (!apiKey) {
-        alert('The API-KEY can not be blank');
-        return;
-      }
+    reader.onload = async (e) => {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet, { raw: true });
 
-      const reader = new FileReader();
+      if (!rows.length) return alert('The file is blank or broken');
 
-      reader.onload = async (e) => {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const sheetName = workbook.SheetNames[0];
-        const sheet = workbook.Sheets[sheetName];
-        const rows = XLSX.utils.sheet_to_json(sheet, { raw: true });
+      const resultados = [];
+      const authorizingMap = {}; // guardar multiClientId -> authorizingEntityId
 
-        if (!rows.length) {
-          alert('The file it is blank or something is broken inside');
-          return;
+      for (const [index, row] of rows.entries()) {
+        const { gatewayName, multiClientId, clientId } = row;
+
+        if (!gatewayName || !multiClientId || !clientId) {
+          log(`❌ Row ${index + 2} missing required fields, skipping`);
+          continue;
         }
 
-        const resultados = [];
+        let authorizingEntityId;
+        const processingEntityId = uuid();
 
-        for (const [index, row] of rows.entries()) {
-          // Leer campos por fila
-          const {
-            gatewayName,
-            multiClientId,
-            clientId
-          } = row;
+        // Verificar si ya existe un authorizing para este multi
+        if (!authorizingMap[multiClientId]) {
+          // Nuevo multi → generar un nuevo authorizing
+          authorizingEntityId = uuid();
+          authorizingMap[multiClientId] = authorizingEntityId;
 
-          if (!gatewayName || !multiClientId || !clientId) {
-            log(`❌ Row ${index + 2} missing field required, skip step`);
-            continue;
-          }
+          log(`➡️ Row ${index + 2}: NEW multiClientId=${multiClientId}, authorizingEntityId=${authorizingEntityId}`);
 
-          const isProd = baseUrl === 'https://api.nuvei.com';
-          const authorizingEntityId = uuid();
-          const processingEntityId = uuid();
-
-          log(`➡️ Row ${index + 2}: gatewayName=${gatewayName}`);
-
-          // Armar pasos para la fila
-          const steps = [
+          steps = [
             {
               method: 'PUT',
               url: `${baseUrl}/entity-management-api/entities/${authorizingEntityId}`,
               body: { id: authorizingEntityId, name: gatewayName },
             },
+            {
+              method: 'PUT',
+              url: `${baseUrl}/entity-management-api/entities/${processingEntityId}`,
+              body: { id: processingEntityId, parentId: authorizingEntityId, name: gatewayName },
+            },
+            {
+              method: 'PUT',
+              url: `${baseUrl}/entity-management-api/entities/${processingEntityId}`,
+              body: {
+                id: processingEntityId,
+                parentId: authorizingEntityId,
+                name: gatewayName,
+                externalIds: { clientId: clientId.toString() },
+              },
+            },
+          ];
+        } else {
+          // Ya existe multi → reusar el mismo authorizing
+          authorizingEntityId = authorizingMap[multiClientId];
+
+          log(`➡️ Row ${index + 2}: EXISTING multiClientId=${multiClientId}, reuse authorizingEntityId=${authorizingEntityId}`);
+
+          steps = [
             {
               method: 'PUT',
               url: `${baseUrl}/entity-management-api/entities/${processingEntityId}`,
@@ -351,68 +354,71 @@
                 name: gatewayName,
                 externalIds: {
                   multiClientId: multiClientId.toString(),
-                  clientId: clientId.toString()
-                }
+                  clientId: clientId.toString(),
+                },
               },
-            }
+            },
           ];
+        }
 
-          // Ejecutar cada paso
-          let success = true;
-          for (let i = 0; i < steps.length; i++) {
-            const { url, method, body } = steps[i];
+        // Ejecutar pasos
+        let success = true;
+        for (let i = 0; i < steps.length; i++) {
+          const { url, method, body } = steps[i];
+          log(`➡️ Step ${i + 1} [${method}] ${url}`);
 
-            log(`➡️ Step ${i + 1} [${method}] URL: ${url}`);
-            if (body) log(`📤 Body: ${JSON.stringify(body, null, 2)}`);
+          try {
+            const res = await fetch('/.netlify/functions/proxy', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                url,
+                method,
+                headers: { 'Content-Type': 'application/json', 'X-API-KEY': apiKey },
+                body,
+              }),
+            });
 
-            try {
-              const res = await fetch('/.netlify/functions/proxy', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url, method, headers: { 'Content-Type': 'application/json', 'X-API-KEY': apiKey }, body }),
-              });
-
-              const text = await res.text();
-
-              if (res.ok || res.status === 201) {
-                log(`✅ Step ${i + 1} OK: ${res.status}`);
-              } else {
-                log(`❌ Step ${i + 1} Falló: ${res.status}\n${text}`);
-                success = false;
-                break;
-              }
-            } catch (err) {
-              log(`❌ Step ${i + 1} Error: ${err.message}`);
+            const text = await res.text();
+            if (res.ok || res.status === 201) {
+              log(`✅ Step ${i + 1} OK`);
+            } else {
+              log(`❌ Step ${i + 1} Failed: ${res.status} - ${text}`);
               success = false;
               break;
             }
+          } catch (err) {
+            log(`❌ Step ${i + 1} Error: ${err.message}`);
+            success = false;
+            break;
           }
-
-          resultados.push({
-            authorizingEntityId,
-            processingEntityId,
-            gatewayName,
-            multiClientId,
-            clientId,
-            status: success ? 'OK' : 'FAILED',
-          });
-
-          await new Promise((r) => setTimeout(r, 300));
         }
 
-        // Crear y descargar Excel resultado
-        const ws = XLSX.utils.json_to_sheet(resultados);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Results');
-        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-        const blob = new Blob([wbout], { type: 'application/octet-stream' });
-        saveAs(blob, 'disputes_results_nuvei.xlsx');
+        resultados.push({
+          authorizingEntityId,
+          processingEntityId,
+          gatewayName,
+          multiClientId,
+          clientId,
+          status: success ? 'OK' : 'FAILED',
+        });
 
-        log('🟢 Execution completed and file generated!');
-      };
+        await new Promise((r) => setTimeout(r, 300));
+      }
 
-      reader.readAsArrayBuffer(fileInput.files[0]);
-    });
-  </script>
+      // Excel resultado
+      const ws = XLSX.utils.json_to_sheet(resultados);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Results');
+      const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+      saveAs(new Blob([wbout], { type: 'application/octet-stream' }), 'disputes_results_nuvei.xlsx');
+
+      log('🟢 Execution completed and file generated!');
+    };
+
+    reader.readAsArrayBuffer(fileInput.files[0]);
+  });
+</script>
+
 </body>
 </html>
