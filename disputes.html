@@ -406,7 +406,7 @@
         XLSX.utils.book_append_sheet(wb, ws, 'Results');
         const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
         const blob = new Blob([wbout], { type: 'application/octet-stream' });
-        saveAs(blob, 'resuls_nuvei.xlsx');
+        saveAs(blob, 'disputes_results_nuvei.xlsx');
 
         log('🟢 Execution completed and file generated!');
       };
