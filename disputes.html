@@ -320,8 +320,6 @@
           }
 
           const isProd = baseUrl === 'https://api.nuvei.com';
-          const pod = isProd ? (podId ? parseInt(podId, 10) : 1) : 1;
-
           const authorizingEntityId = uuid();
           const processingEntityId = uuid();
 
