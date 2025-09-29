@@ -252,6 +252,16 @@
     </div>
   </div>
 
+  <script>
+  const path = window.location.pathname.replace('/', '').replace('.html', '') || 'index';
+
+  document.querySelectorAll('ul li a').forEach(link => {
+    if (link.classList.contains(path)) {
+      link.classList.add('active');
+    }
+  });
+</script>
+
 <script>
   const log = (msg) => {
     const logBox = document.getElementById('logBox');

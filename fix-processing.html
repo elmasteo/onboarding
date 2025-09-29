@@ -5,30 +5,233 @@
   <title>Fix Processing Entities</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    input, button { margin: 5px 0; padding: 8px; }
-    #log { white-space: pre-wrap; background: #f8f8f8; padding: 10px; border: 1px solid #ddd; height: 300px; overflow-y: auto; }
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #e9ecef;
+      padding: 40px 20px;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .logo-wrapper {
+      width: 100%;
+      max-width: 1000px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .logo-wrapper img {
+      max-width: 180px;
+      height: auto;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+    }
+
+    .container {
+      max-width: 1000px;
+      width: 100%;
+      background: #fff;
+      padding: 24px;
+      border-radius: 14px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      display: flex;
+      gap: 24px;
+    }
+
+    .form-section,
+    .log-section {
+      flex: 1;
+      min-width: 300px;
+    }
+
+    h2 {
+      margin-top: 0;
+      font-size: 18px;
+      font-weight: 600;
+      color: #212529;
+      margin-bottom: 12px;
+    }
+
+    label {
+      display: block;
+      margin-top: 14px;
+      font-weight: 600;
+      color: #495057;
+      font-size: 14px;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 10px 12px;
+      margin-top: 5px;
+      border: 1px solid #ced4da;
+      border-radius: 8px;
+      font-size: 14px;
+      background: #f8f9fa;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input:focus,
+    select:focus {
+      outline: none;
+      border-color: #339af0;
+      box-shadow: 0 0 0 2px rgba(51, 154, 240, 0.2);
+      background: #fff;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      background: #081f2c;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      margin-top: 24px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button:hover {
+      background: #175b81;
+    }
+
+    .log {
+      background: #111;
+      color: #39ff14;
+      padding: 12px;
+      font-family: monospace;
+      height: 700px;
+      overflow-y: auto;
+      border-radius: 8px;
+      font-size: 13px;
+      border: 1px solid #333;
+    }
+
+    .log div {
+      margin-bottom: 10px;
+      max-width: 100%;
+      word-break: break-word;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+      }
+    }
+    .tab-wrapper {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 20px 0;
+      display: flex;
+      gap: 12px;
+      border-bottom: 2px solid #dee2e6;
+      max-width: 960px;
+      width: 100%;
+    }
+
+    ul li a {
+      display: inline-block;
+      padding: 10px 18px;
+      border-radius: 8px 8px 0 0;
+      text-decoration: none;
+      color: #495057;
+      background: #f1f3f5;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    ul li a:hover {
+      background: #e9ecef;
+      color: #212529;
+    }
+
+    ul li a.active {
+      background: #081f2c;
+      color: #fff;
+    }
+
+    input[type="file"] {
+      width: calc(100% - 22px);
+      padding: 10px;
+      margin: 20px auto;
+      border: 2px solid #091f2d;
+      border-radius: 10px;
+      display: block;
+      font-size: 16px;
+      color: #091f2d;
+      background-color: #f9f9f9;
+      cursor: pointer;
+    }
+
+    input[type="file"]::file-selector-button {
+      background: #091f2d;
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    input[type="file"]::file-selector-button:hover {
+      background: #091f2d;
+    }
+    .download-btn {
+      display: inline-block;
+      background-color: #081f2c;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 15px;
+      margin-top: 16px;
+      transition: background 0.2s;
+    }
+
+    .download-btn:hover {
+      background-color: #175b81;
+    }
+
   </style>
 </head>
 <body>
-  <h2>Fix Processing Entities</h2>
-
-  <label for="baseUrl">Base URL:</label>
+  <div class="container">
+    <div class="form-section">
+      <label for="baseUrl">Base URL:</label>
       <select id="baseUrl">
         <option value="https://api-sandbox.nuvei.com">https://api-sandbox.nuvei.com - INT</option>
         <option value="https://api.nuvei.com">https://api.nuvei.com - PROD</option>
       </select>
 
-  <label for="apiKey">API Key:</label><br>
-  <input type="text" id="apiKey" placeholder="API Key" required /><br>
+      <label for="apiKey">API Key:</label>
+      <input id="apiKey" type="password" placeholder="X-API-KEY" required />
 
-  <label for="excelFile">Archivo Excel:</label><br>
-  <input type="file" id="excelFile" accept=".xlsx,.xls" /><br>
+      <label for="excelFile">Excel File:</label>
+      <input id="excelFile" type="file" accept=".xlsx" />
 
-  <button id="procesar">Procesar</button>
+      <button id="procesar">Submit</button>
+    </div>
 
-  <h3>Log:</h3>
-  <div id="log"></div>
+    <div class="log-section">
+      <h2>Log</h2>
+      <div class="log" id="log"></div>
+    </div>
+  </div>
 
   <script>
     function log(msg) {
@@ -42,8 +245,8 @@
       const apiKey = document.getElementById("apiKey").value.trim();
       const fileInput = document.getElementById("excelFile");
 
-      if (!fileInput.files.length) return alert("Selecciona un archivo Excel");
-      if (!baseUrl || !apiKey) return alert("Base URL y API Key son requeridos");
+      if (!fileInput.files.length) return alert("Select an excel file");
+      if (!baseUrl || !apiKey) return alert("Base URL and API Key are required!");
 
       const reader = new FileReader();
       reader.onload = async (e) => {
@@ -56,11 +259,11 @@
           const { authorizingEntityId, processingEntityId, gatewayName, clientId } = row;
 
           if (!authorizingEntityId || !processingEntityId || !gatewayName || !clientId) {
-            log(`❌ Fila ${i + 2}: faltan datos`);
+            log(`❌ Row ${i + 2}: missing fields`);
             continue;
           }
 
-          log(`➡️ Fila ${i + 2}: processingEntityId=${processingEntityId}`);
+          log(`➡️ Row ${i + 2}: processingEntityId=${processingEntityId}`);
 
           const steps = [
             {
@@ -112,16 +315,16 @@
           }
 
           if (success) {
-            log(`✅ Fila ${i + 2} completada\n`);
+            log(`✅ Row ${i + 2} completed\n`);
           } else {
-            log(`❌ Fila ${i + 2} falló\n`);
+            log(`❌ Row ${i + 2} failed\n`);
           }
 
           // espera un poco entre requests para no saturar
           await new Promise(r => setTimeout(r, 200));
         }
 
-        log("🟢 Proceso finalizado");
+        log("🟢 Execution completed");
       };
 
       reader.readAsArrayBuffer(fileInput.files[0]);
