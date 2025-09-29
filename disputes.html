@@ -298,68 +298,70 @@
         let authorizingEntityId;
         const processingEntityId = uuid();
 
-        // Verificar si ya existe un authorizing para este multi
-        if (!authorizingMap[multiClientId]) {
-          // Nuevo multi → generar un nuevo authorizing
-          authorizingEntityId = uuid();
-          authorizingMap[multiClientId] = authorizingEntityId;
+if (!authorizingMap[multiClientId]) {
+  // 🔹 Nuevo multi → generar authorizing y processing inicial
+  authorizingEntityId = uuid();
+  authorizingMap[multiClientId] = authorizingEntityId;
 
-          log(`➡️ Row ${index + 2}: NEW multiClientId=${multiClientId}, authorizingEntityId=${authorizingEntityId}`);
+  log(`➡️ Row ${index + 2}: NEW multiClientId=${multiClientId}, authorizingEntityId=${authorizingEntityId}`);
 
-          steps = [
-            {
-              method: 'PUT',
-              url: `${baseUrl}/entity-management-api/entities/${authorizingEntityId}`,
-              body: { id: authorizingEntityId, name: gatewayName },
-            },
-            {
-              method: 'PUT',
-              url: `${baseUrl}/entity-management-api/entities/${processingEntityId}`,
-              body: { id: processingEntityId, parentId: authorizingEntityId, name: gatewayName },
-            },
-            {
-              method: 'PUT',
-              url: `${baseUrl}/entity-management-api/entities/${processingEntityId}`,
-              body: {
-                id: processingEntityId,
-                parentId: authorizingEntityId,
-                name: gatewayName,
-                externalIds: { clientId: clientId.toString() },
-              },
-            },
-          ];
-        } else {
-          // Ya existe multi → reusar el mismo authorizing
-          authorizingEntityId = authorizingMap[multiClientId];
+  steps = [
+    {
+      method: 'PUT',
+      url: `${baseUrl}/entity-management-api/entities/${authorizingEntityId}`,
+      body: { id: authorizingEntityId, name: gatewayName },
+    },
+    {
+      method: 'PUT',
+      url: `${baseUrl}/entity-management-api/entities/${processingEntityId}`,
+      body: { id: processingEntityId, parentId: authorizingEntityId, name: gatewayName },
+    },
+    {
+      method: 'POST',
+      url: `${baseUrl}/auth-api/api-keys`,
+      body: { scope: 'disputes', entityId: authorizingEntityId, appId: 'nss' },
+    },
+    {
+      method: 'PUT',
+      url: `${baseUrl}/entity-management-api/entities/${processingEntityId}`,
+      body: {
+        id: processingEntityId,
+        parentId: authorizingEntityId,
+        name: gatewayName,
+        externalIds: {
+          multiClientId: multiClientId.toString(),
+          clientId: clientId.toString()
+        },
+      },
+    },
+  ];
+} else {
+  // 🔹 Multi existente → reusar authorizing, solo crear nuevo processing
+  authorizingEntityId = authorizingMap[multiClientId];
 
-          log(`➡️ Row ${index + 2}: EXISTING multiClientId=${multiClientId}, reuse authorizingEntityId=${authorizingEntityId}`);
+  log(`➡️ Row ${index + 2}: EXISTING multiClientId=${multiClientId}, reuse authorizingEntityId=${authorizingEntityId}`);
 
-          steps = [
-            {
-              method: 'PUT',
-              url: `${baseUrl}/entity-management-api/entities/${processingEntityId}`,
-              body: { id: processingEntityId, parentId: authorizingEntityId, name: gatewayName },
-            },
-            {
-              method: 'POST',
-              url: `${baseUrl}/auth-api/api-keys`,
-              body: { scope: 'disputes', entityId: authorizingEntityId, appId: 'nss' },
-            },
-            {
-              method: 'PUT',
-              url: `${baseUrl}/entity-management-api/entities/${processingEntityId}`,
-              body: {
-                id: processingEntityId,
-                parentId: authorizingEntityId,
-                name: gatewayName,
-                externalIds: {
-                  multiClientId: multiClientId.toString(),
-                  clientId: clientId.toString(),
-                },
-              },
-            },
-          ];
-        }
+  steps = [
+    {
+      method: 'PUT',
+      url: `${baseUrl}/entity-management-api/entities/${processingEntityId}`,
+      body: { id: processingEntityId, parentId: authorizingEntityId, name: gatewayName },
+    },
+    {
+      method: 'PUT',
+      url: `${baseUrl}/entity-management-api/entities/${processingEntityId}`,
+      body: {
+        id: processingEntityId,
+        parentId: authorizingEntityId,
+        name: gatewayName,
+        externalIds: {
+          clientId: clientId.toString(),
+        },
+      },
+    },
+  ];
+}
+
 
         // Ejecutar pasos
         let success = true;
