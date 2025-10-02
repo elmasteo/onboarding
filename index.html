@@ -182,6 +182,12 @@
       background: #081f2c;
       color: #fff;
     }
+    .footer-extra {
+      color: #000;
+      font-size: 14px;
+      padding: 12px;
+      text-align: center;
+    }
 
   </style>
 </head>
@@ -329,7 +335,18 @@
       {
         method: 'POST',
         url: `${baseUrl}/auth-api/api-keys`,
-        body: { scope: "operations", entityId: authorizingEntityId, appId: "nss" }
+        body: isProd
+          ? { 
+              scope: "operations", 
+              entityId: authorizingEntityId, 
+              appId: "nss" 
+            }
+          : { 
+              scope: "operations", 
+              entityId: authorizingEntityId, 
+              appId: "rest2n",
+              organization: inputs.gatewayName 
+            }
       },
       {
         method: 'PUT',
@@ -490,6 +507,16 @@
         },
         {
           method: 'PUT',
+          url: `${baseUrl}/notifier-api/configurations/entities/${processingEntityId}/features/final-notifications/processing`,
+          body: {
+            confirmationType: "PRE_DEPOSIT",
+            contentType: document.getElementById('contentType').value,
+            deliveryMethod: document.getElementById('deliveryMethod').value,
+            notificationUrl: document.getElementById('webhookUrl').value
+          }
+        },
+        {
+          method: 'PUT',
           url: `${baseUrl}/notifier-api/configurations/entities/${processingEntityId}/features/shared-secrets`,
           body: {
             sharedSecret: document.getElementById('sharedSecret').value
@@ -544,5 +571,12 @@
   });
 
   </script>
+<footer class="footer-extra">
+      &copy; <span id="anio"></span> Made by Santiago Gómez - Any questions typed me on teams! 
+    </footer>
+<script>
+      document.getElementById("anio").textContent = new Date().getFullYear();
+</script>
+
 </body>
 </html>

@@ -209,6 +209,12 @@
     .download-btn:hover {
       background-color: #175b81;
     }
+    .footer-extra {
+      color: #000;
+      font-size: 14px;
+      padding: 12px;
+      text-align: center;
+    }
 
   </style>
 </head>
@@ -397,6 +403,12 @@ document.getElementById('procesar').addEventListener('click', async () => {
   reader.readAsArrayBuffer(fileInput.files[0]);
 });
 
+</script>
+<footer class="footer-extra">
+      &copy; <span id="anio"></span> Made by Santiago Gómez - Any questions typed me on teams! 
+    </footer>
+<script>
+      document.getElementById("anio").textContent = new Date().getFullYear();
 </script>
 </body>
 </html>
