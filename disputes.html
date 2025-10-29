@@ -335,7 +335,7 @@ if (!authorizingMap[multiClientId]) {
     {
       method: 'POST',
       url: `${baseUrl}/auth-api/api-keys`,
-      body: { scope: 'disputes', entityId: authorizingEntityId, appId: 'rest2n' },
+      body: { scope: 'disputes', entityId: authorizingEntityId, appId: 'rest2n', organization: gatewayName },
     },
     {
       method: 'PUT',

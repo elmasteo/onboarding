@@ -352,7 +352,7 @@
             {
               method: 'POST',
               url: `${baseUrl}/auth-api/api-keys`,
-              body: { scope: 'operations', entityId: authorizingEntityId, appId: 'nss' },
+              body: { scope: 'operations', entityId: authorizingEntityId, appId: 'rest2n', organization: gatewayName },
             },
             {
               method: 'PUT',
