@@ -335,17 +335,10 @@
       {
         method: 'POST',
         url: `${baseUrl}/auth-api/api-keys`,
-        body: isProd
-          ? { 
+        body: { 
               scope: "operations", 
               entityId: authorizingEntityId, 
-              appId: "nss" 
-            }
-          : { 
-              scope: "operations", 
-              entityId: authorizingEntityId, 
-              appId: "rest2n",
-              organization: inputs.gatewayName 
+              appId: "rest2n"
             }
       },
       {
@@ -454,8 +447,8 @@
               uriScheme: "https",
               uriHost: "apmgw.sandbox.safecharge.com",
               uriPort: 443,
-              uriPath: "/Service.asmx/Process",
-              uriRestPath: "/api/apmgw",
+              uriPath: "/APMService.asmx",
+              uriRestPath: "/api/v2/Transaction/ExecuteRequest",
               podId,
               gatewayProtocolVersion: "4.1.9"
             }

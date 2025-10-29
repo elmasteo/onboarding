@@ -468,16 +468,16 @@
                   }
                 : {
                     gatewayName,
-                    gatewayStatus: 'ONLINE',
-                    uriScheme: 'http',
-                    uriHost: 'apmgw.sandbox.safecharge.com',
-                    uriPort: 80,
-                    uriPath: '/Service.asmx/Process',
-                    uriRestPath: '/api/apmgw',
+                    gatewayStatus: "ONLINE",
+                    uriScheme: "https",
+                    uriHost: "apmgw.sandbox.safecharge.com",
+                    uriPort: 443,
+                    uriPath: "/APMService.asmx",
+                    uriRestPath: "/api/v2/Transaction/ExecuteRequest",
                     podId: pod,
-                    gatewayProtocolVersion: '4.1.9',
+                    gatewayProtocolVersion: "4.1.9"
+                  }
                   },
-            },
             {
               method: 'PUT',
               url: `${baseUrl}/apm-gw-connector-api/configurations/entities/${authorizingEntityId}/features/gateways`,
