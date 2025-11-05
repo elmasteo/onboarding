@@ -117,7 +117,7 @@ label:not(.checkbox-item) {
       <li><a class="massive" href="massive.html">Massive</a></li>
       <li><a class="subaccounts" href="subaccounts.html">Subaccounts</a></li>
       <li><a class="disputes" href="disputes.html">Disputes</a></li>
-      <li><a class="configureapms" href="APMs-config.html">Configure APMs</a></li>
+      <li><a class="configureapms" href="apmsconfig.html">Configure APMs</a></li>
     </ul>
   </div>
 
@@ -237,6 +237,12 @@ document.getElementById("sendSequentialBtn").onclick=async()=>{
   }
   log(`Execution completed ${okCount}/${list.length}`);
 };
+</script>
+<footer class="footer-extra">
+      &copy; <span id="anio"></span> Made by Santiago Gómez - Any questions typed me on teams! 
+    </footer>
+<script>
+      document.getElementById("anio").textContent = new Date().getFullYear();
 </script>
 </body>
 </html>
