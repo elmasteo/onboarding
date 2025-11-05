@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<link rel="icon" href="https://docs.nuvei.com/wp-content/themes/manual-child/img/favicons/cropped-favicon-nuvei-32x32.png" sizes="32x32">
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<title>Configure APMs - Nuvei</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#e9ecef;padding:40px 20px;margin:0;display:flex;flex-direction:column;align-items:center}
+.logo-wrapper{width:100%;max-width:1000px;margin-bottom:20px;text-align:center}
+.logo-wrapper img{max-width:180px;height:auto;filter:drop-shadow(0 2px 4px rgba(0,0,0,.2))}
+.container{max-width:1000px;width:100%;background:#fff;padding:24px;border-radius:14px;box-shadow:0 4px 20px rgba(0,0,0,.08);display:flex;gap:24px}
+.form-section,.log-section{flex:1;min-width:300px}
+h2{margin-top:0;font-size:18px;font-weight:600;color:#212529;margin-bottom:12px}
+label{display:block;margin-top:14px;font-weight:600;color:#495057;font-size:14px}
+input,select{width:100%;padding:10px 12px;margin-top:5px;border:1px solid #ced4da;border-radius:8px;font-size:14px;background:#f8f9fa;transition:border-color .2s,box-shadow .2s}
+input:focus,select:focus{outline:none;border-color:#339af0;box-shadow:0 0 0 2px rgba(51,154,240,.2);background:#fff}
+button{width:100%;padding:14px;background:#081f2c;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;margin-top:24px;cursor:pointer;transition:background .2s}
+button:hover{background:#175b81}
+.log{background:#111;color:#39ff14;padding:12px;font-family:monospace;height:700px;overflow-y:auto;border-radius:8px;font-size:13px;border:1px solid #333}
+.log div{margin-bottom:10px;max-width:100%;word-break:break-word}
+@media(max-width:768px){.container{flex-direction:column}}
+ul{list-style:none;padding:0;margin:0 0 20px 0;display:flex;gap:12px;border-bottom:2px solid #dee2e6;max-width:960px;width:100%}
+.checkbox-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px}
+.checkbox-item{display:flex;align-items:center;gap:8px;padding:6px 4px}
+.small{width:auto;padding:8px 12px;font-size:13px;margin-top:10px}
+.row{display:flex;gap:12px;align-items:center;margin-top:6px}
+.success-log{color:#7efc6f}
+.error-log{color:#ff6b6b}
+
+/* Quita la regla global que fuerza label a block */
+label:not(.checkbox-item) {
+  display:block;
+}
+
+/* Mantén la grilla como está pero dale consistencia */
+.checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px 20px; /* un poco más de aire */
+  margin-top: 8px;
+}
+
+/* Cada ítem en línea perfecta */
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 2px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Checkbox sin expansión rara */
+.checkbox-item input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+}
+
+.tab-wrapper {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 20px 0;
+      display: flex;
+      gap: 12px;
+      border-bottom: 2px solid #dee2e6;
+      max-width: 960px;
+      width: 100%;
+    }
+
+    ul li a {
+      display: inline-block;
+      padding: 10px 18px;
+      border-radius: 8px 8px 0 0;
+      text-decoration: none;
+      color: #495057;
+      background: #f1f3f5;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    ul li a:hover {
+      background: #e9ecef;
+      color: #212529;
+    }
+
+    ul li a.active {
+      background: #081f2c;
+      color: #fff;
+    }
+    .footer-extra {
+      color: #000;
+      font-size: 14px;
+      padding: 12px;
+      text-align: center;
+    }
+
+</style>
+</head>
+
+<body>
+ <div class="logo-wrapper">
+    <img src="https://cdn.paymentez.com/img/nv/nuvei_logo.png" alt="Nuvei Logo">
+  </div>
+
+  <div class="tab-wrapper">
+    <ul>
+      <li><a class="index" href="index.html">Single</a></li>
+      <li><a class="massive" href="massive.html">Massive</a></li>
+      <li><a class="subaccounts" href="subaccounts.html">Subaccounts</a></li>
+      <li><a class="disputes" href="disputes.html">Disputes</a></li>
+      <li><a class="configureapms" href="APMs-config.html">Configure APMs</a></li>
+    </ul>
+  </div>
+
+<div class="container">
+  <div class="form-section">
+
+    <label>Base URL:</label>
+    <select id="urlSelect">
+      <option value="https://api-sandbox.nuvei.com">sandbox - https://api-sandbox.nuvei.com</option>
+      <option value="https://api.nuvei.com">prod - https://api.nuvei.com</option>
+    </select>
+
+    <label>X-API-KEY</label>
+    <input id="apiKey" type="password" placeholder="X-API-KEY"/>
+
+    <label>processingEntityId</label>
+    <input id="processingEntityId" />
+
+    <label>Payment Methods</label>
+    <div class="checkbox-grid" id="methodsList"></div>
+
+    <div class="row">
+      <button id="selectAll" class="small">Select All</button>
+      <button id="deselectAll" class="small">Deselect All</button>
+    </div>
+
+    <button id="sendSequentialBtn">Submit configs</button>
+    <button id="clearLog" class="small">Clear log</button>
+  </div>
+
+  <div class="log-section">
+    <h2>Log</h2>
+    <div id="log" class="log"></div>
+  </div>
+</div>
+
+ <script>
+  const path = window.location.pathname.replace('/', '').replace('.html', '') || 'index';
+
+  document.querySelectorAll('ul li a').forEach(link => {
+    if (link.classList.contains(path)) {
+      link.classList.add('active');
+    }
+  });
+</script>
+
+<script>
+const PAYMENT_METHODS=[
+"PayPal","ACH","GooglePay","ApplePay","InteracInstant","InteraceTransfer","InstantBankTransfer",
+"iDeal","Sofort","Grabpay","Grabpaymalaysia","Linkaja","Shopeepay","PayNow","Trustly",
+"EPS","Skrill","cashApp","QRIS"
+];
+
+const methodsList=document.getElementById("methodsList");
+PAYMENT_METHODS.forEach(m=>{
+  const div=document.createElement("div");
+  div.className="checkbox-item";
+  div.innerHTML=`<input type="checkbox" value="${m}"><span>${m}</span>`;
+  methodsList.appendChild(div);
+});
+
+const logEl=document.getElementById("log");
+function log(msg,type){
+  const d=document.createElement("div");
+  d.textContent=`[${new Date().toISOString()}] ${msg}`;
+  d.className = type === "error" ? "error-log" : type === "success" ? "success-log" : "";
+  logEl.append(d);
+  logEl.scrollTop=logEl.scrollHeight;
+}
+
+function getSelected(){
+  return [...document.querySelectorAll("#methodsList input:checked")].map(e=>e.value);
+}
+
+document.getElementById("selectAll").onclick=()=>document.querySelectorAll("#methodsList input").forEach(i=>i.checked=true);
+document.getElementById("deselectAll").onclick=()=>document.querySelectorAll("#methodsList input").forEach(i=>i.checked=false);
+document.getElementById("clearLog").onclick=()=>logEl.innerHTML="";
+
+async function callMethod(base,id,key,m){
+  const url=`${base}/account-api/configurations/entities/${encodeURIComponent(id)}/payment-options/${encodeURIComponent(m)}`;
+  log(`PUT ${url}`);
+
+  try{
+    const res=await fetch(url,{method:"PUT",headers:{"Content-Type":"application/json","X-API-KEY":key},body:`{"enabled":true}`});
+    const txt=await res.text();
+    let ok=false;
+    try{
+      const json=JSON.parse(txt);
+      ok=json?.result?.status==="success";
+    }catch{}
+
+    log(`${m} -> ${txt}`, ok ? "success" : "error");
+    return ok;
+  }catch(e){
+    log(`${m} -> ERROR ${e.message}`,"error");
+    return false;
+  }
+}
+
+document.getElementById("sendSequentialBtn").onclick=async()=>{
+  const base=document.getElementById("urlSelect").value.trim();
+  const id=document.getElementById("processingEntityId").value.trim();
+  const key=document.getElementById("apiKey").value.trim();
+  const list=getSelected();
+
+  if(!id) return log("processingEntityId required","error");
+  if(!key) return log("X-API-KEY required","error");
+  if(!list.length) return log("Select at least one APM","error");
+
+  log(`Starting ${list.length} requests`);
+  let okCount=0;
+
+  for(const m of list){
+    const ok=await callMethod(base,id,key,m);
+    if(ok) okCount++;
+    await new Promise(r=>setTimeout(r,200));
+  }
+  log(`Execution completed ${okCount}/${list.length}`);
+};
+</script>
+</body>
+</html>
