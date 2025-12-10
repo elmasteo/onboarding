@@ -496,11 +496,6 @@
             },
             {
               method: 'PUT',
-              url: `${baseUrl}/account-api/configurations/entities/${processingEntityId}/features/payment-tokens-sharing-policies`,
-              body: { paymentTokenSharingPolicy: 'SHARE_ALL' },
-            },
-            {
-              method: 'PUT',
               url: `${baseUrl}/account-api/configurations/entities/${processingEntityId}/features/payment-tokens-uniqueness-policies`,
               body: { paymentTokenUniquenessPolicy: 'ALLOW_DUPLICATES' },
             },
